@@ -943,14 +943,36 @@
       <line x1="30" y1="84" x2="310" y2="84" stroke="#94a3b8" stroke-width="2"/>
       <text x="170" y="100" fill="#cbd5e1" font-size="11" text-anchor="middle">전체를 ${tot}칸으로 나누어 생각하세요</text></svg>`;
   }
+  // V6.2: 그림 속 글자도 분수는 세로 분수로 (예: '넓이 16/35 m²' → 넓이 [16 위 / 35 아래] m²)
+  function svgW(str, fs) { let w = 0; for (const ch of String(str)) w += /[ -~]/.test(ch) ? (ch === ' ' ? 0.3 : 0.6) * fs : (ch === '²' ? 0.4 * fs : 1.0 * fs); return w; }
+  function svgFracLabel(cx, cy, pre, val, post, fill, fs, weight) {
+    const m = /^(?:(\d+)과\s*)?(\d+)\/(\d+)$/.exec(String(val));
+    const attrs = `fill="${fill}" font-size="${fs}" font-weight="${weight || 'bold'}"`;
+    if (!m) return `<text x="${cx}" y="${cy}" ${attrs} text-anchor="middle">${esc(pre + val + post)}</text>`;
+    const whole = m[1] || '', n = m[2], d = m[3], ffs = Math.round(fs * 0.85);
+    const fw = Math.max(n.length, d.length) * ffs * 0.62 + 6;
+    const wPre = svgW(pre, fs), wWhole = whole ? svgW(whole, fs) + 2 : 0, wPost = svgW(post, fs);
+    let x = cx - (wPre + wWhole + fw + wPost) / 2;
+    const mid = cy - fs * 0.36;
+    let out = '';
+    if (pre) { out += `<text x="${x.toFixed(1)}" y="${cy}" ${attrs}>${esc(pre)}</text>`; x += wPre; }
+    if (whole) { out += `<text x="${x.toFixed(1)}" y="${cy}" ${attrs}>${whole}</text>`; x += wWhole; }
+    const fc = x + fw / 2;
+    out += `<text x="${fc.toFixed(1)}" y="${(mid - 2).toFixed(1)}" fill="${fill}" font-size="${ffs}" font-weight="${weight || 'bold'}" text-anchor="middle">${n}</text>`;
+    out += `<line x1="${(x + 1).toFixed(1)}" y1="${(mid + 1).toFixed(1)}" x2="${(x + fw - 1).toFixed(1)}" y2="${(mid + 1).toFixed(1)}" stroke="${fill}" stroke-width="1.6"/>`;
+    out += `<text x="${fc.toFixed(1)}" y="${(mid + ffs + 1).toFixed(1)}" fill="${fill}" font-size="${ffs}" font-weight="${weight || 'bold'}" text-anchor="middle">${d}</text>`;
+    x += fw;
+    if (post) out += `<text x="${x.toFixed(1)}" y="${cy}" ${attrs}>${esc(post)}</text>`;
+    return out;
+  }
   function svgRectFrac(spec) {
     return `<svg viewBox="0 0 320 130" class="w-full max-w-[330px] h-auto">
       <rect x="75" y="25" width="160" height="75" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
-      <text x="155" y="68" fill="#bae6fd" font-size="14" font-weight="bold" text-anchor="middle">넓이 ${esc(spec.area)} m²</text>
+      ${svgFracLabel(155, 68, '넓이 ', spec.area, ' m²', '#bae6fd', 14)}
       <line x1="75" y1="114" x2="235" y2="114" stroke="#fde047" stroke-width="2"/>
       <text x="155" y="127" fill="#fde047" font-size="13" font-weight="bold" text-anchor="middle">가로 = ? m</text>
       <line x1="248" y1="25" x2="248" y2="100" stroke="#f472b6" stroke-width="2"/>
-      <text x="284" y="66" fill="#f472b6" font-size="12" font-weight="bold" text-anchor="middle">세로 ${esc(spec.side)} m</text></svg>`;
+      ${svgFracLabel(284, 66, '세로 ', spec.side, ' m', '#f472b6', 12)}</svg>`;
   }
   function renderDiagram(spec) {
     if (!spec) return '';

@@ -112,6 +112,22 @@
       gap: 2px;
       font-weight: 900;
     }
+    /* V6.2 문제 글씨 키우기: 퍼즐·심장박동·걸쇠 창 안의 글씨를 한 단계씩 크게 (선생님 피드백) */
+    :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .text-\[10px\], :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .text-\[11px\] { font-size: 0.8rem; }
+    :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .text-xs { font-size: 0.92rem; line-height: 1.3rem; }
+    :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .text-sm { font-size: 1.06rem; line-height: 1.5rem; }
+    :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .text-base { font-size: 1.2rem; line-height: 1.7rem; }
+    :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .text-lg { font-size: 1.35rem; line-height: 1.8rem; }
+    :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .text-xl { font-size: 1.5rem; line-height: 2rem; }
+    @media (min-width: 640px) {
+      :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .sm\:text-sm { font-size: 1.12rem; line-height: 1.6rem; }
+      :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .sm\:text-base { font-size: 1.3rem; line-height: 1.85rem; }
+      :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .sm\:text-lg { font-size: 1.45rem; line-height: 2rem; }
+      :is(#puzzle-modal, #heartbeat-modal, #emergency-modal) .sm\:text-xl { font-size: 1.6rem; line-height: 2.1rem; }
+    }
+    #modal-question { font-size: 1.25rem !important; line-height: 1.8rem !important; }
+    @media (min-width: 640px) { #modal-question { font-size: 1.55rem !important; line-height: 2.2rem !important; } #puzzle-modal > div { max-width: 52rem; } }
+    #modal-question .math-frac, #hb-question .math-frac, #em-question .math-frac { font-size: 1.05em; }
     /* V5: 퍼즐·긴급 창이 열리면 터치 조작 UI를 숨겨 입력창과 겹치지 않게 함 */
     body.modal-open #joystick-zone, body.modal-open #turn-controls, body.modal-open #proximity-btn { visibility: hidden; }
     body.modal-open #toast-box { bottom: auto; top: 12px; }
@@ -188,13 +204,13 @@
           <b class="text-sky-400">🏃 이동 · 웅크리기 · 손전등 · 가구 탐색</b>
           <p class="mt-1 text-slate-300">• <b>이동/시점:</b> 모바일은 왼쪽 <b>조이스틱</b> + 오른쪽 화면 드래그 / PC는 <b>WASD</b> + 마우스 움직이기 (ESC = 마우스 풀기)</p>
           <p class="text-slate-300">• <b>웅크리기(C / Ctrl / 상단 버튼):</b> 몸을 낮춰 발소리를 줄이고 낮은 장애물을 통과합니다.</p>
-          <p class="text-slate-300">• <b>손전등(F / 버튼) & 상호작용(E / 버튼):</b> 서랍에서 열쇠·배터리·회복약을 찾고 장치를 작동하세요.</p>
+          <p class="text-slate-300">• <b>손전등(F / 버튼) & 상호작용(E / 버튼):</b> 서랍에서 열쇠·배터리·회복약을 찾고 장치를 작동하세요. <b>회복약은 H</b>(또는 🩹 버튼)로 바로 사용.</p>
           <p class="text-slate-300">• <b>문제는 방마다 한 곳(장치·패널)에서만</b> 풀 수 있어요. 문은 잠겨 있으니 <b>노란 화살표</b>가 가리키는 장치를 찾으세요. 열쇠·퓨즈·룬 조각도 그 장치에 끼웁니다.</p>
           <p class="text-slate-300">• <b>단계:</b> 쉬움(시즌1)을 탈출하면 보통(시즌2), 보통을 탈출하면 도전(최종)이 열립니다.</p>
         </div>
         <div class="bg-black/50 p-2.5 rounded-xl border border-rose-500/40">
           <b class="text-rose-400">⚡ 러쉬 (RUSH) & 🌀 앰부쉬 (AMBUSH)</b>
-          <p class="mt-0.5 text-slate-300">전등이 깜빡이고 멀리서 굉음이 들리면 옷장에 숨으세요. 러쉬는 옷장 걸쇠 문제를 틀리면 <b>되돌아와 옷장 문을 천천히 열고 습격</b>하며, 앰부쉬는 청록빛 섬광과 함께 <b>복도를 여러 번 왕복</b>합니다.</p>
+          <p class="mt-0.5 text-slate-300">전등이 깜빡이고 멀리서 굉음이 들리면 옷장에 숨으세요. 옷장에 숨어 있으면 <b>러쉬는 그대로 지나가고</b>(문제 없음), 앰부쉬는 청록빛 섬광과 함께 <b>복도를 여러 번 왕복</b>합니다.</p>
         </div>
         <div class="bg-black/50 p-2.5 rounded-xl border border-purple-500/40">
           <b class="text-purple-400">👁️ 스크리치 (SCREECH) — 손전등 비추고 흔들기</b>
@@ -380,7 +396,7 @@
             🧍 서기 (C)
           </button>
           <button onclick="useMedkit()" id="medkit-btn" class="hidden px-2 py-0.5 rounded bg-rose-500/30 border border-rose-400 text-rose-200 hover:bg-rose-500 hover:text-white transition">
-            🩹 회복약(1)
+            🩹 회복약(1) [H]
           </button>
         </div>
 
@@ -448,7 +464,7 @@
             유형 A · 선 잇기 퍼즐
           </span>
         </div>
-        <button onclick="closePuzzleModal()" class="text-slate-400 hover:text-white font-bold text-sm px-2.5 py-1 bg-slate-800 rounded-lg">
+        <button onclick="closePuzzleModal()" class="text-slate-400 hover:text-white font-bold text-sm px-2.5 py-1 bg-slate-800 rounded-lg whitespace-nowrap shrink-0">
           ✕ 닫기
         </button>
       </div>
@@ -530,9 +546,10 @@
     <div class="w-full max-w-md bg-[#1a0610]/95 border-2 border-rose-500 rounded-2xl p-5 text-center shadow-[0_0_50px_rgba(225,29,72,0.8)]">
       <div class="inline-block bg-rose-700 text-white text-xs font-black px-3 py-0.5 rounded-full mb-2">HEARTBEAT</div>
       <h2 class="title-font text-xl sm:text-2xl text-rose-300 mb-1"><span id="hb-heart" class="heart-beat">❤️</span> 피규어가 옷장 앞에 서 있다…</h2>
-      <p class="text-xs sm:text-sm text-slate-300 mb-2">숨을 고르세요. 정답을 고르면 심장박동이 가라앉고 피규어가 떠납니다.</p>
+      <p class="text-xs sm:text-sm text-slate-300 mb-2">숨을 고르세요. 시간 안에 정답을 고르면 심장박동이 가라앉고 피규어가 떠납니다.</p>
+      <div class="flex items-center justify-between text-xs font-black text-rose-200 mb-1"><span>⏱ 남은 시간</span><span id="hb-secs">15초</span></div>
       <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-rose-500/50 mb-3">
-        <div id="hb-bar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-600 w-1/3 transition-all duration-300"></div>
+        <div id="hb-bar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-600 w-full"></div>
       </div>
       <div class="bg-black/80 border border-rose-500/40 rounded-xl p-3.5 mb-3">
         <p id="hb-question" class="text-base sm:text-lg font-black text-amber-300 break-keep"></p>
@@ -596,9 +613,11 @@
       s = s.replace(/(\d+)\s*과\s*(\d+)\/(\d+)/g, (_, w, n, d) => {
         return `<span class="math-mixed"><span>${w}</span><span class="math-frac"><span class="num">${n}</span><span class="den">${d}</span></span></span>`;
       });
-      s = s.replace(/(^|[^0-9\/])(\d+)\/(\d+)(?![0-9\/])/g, (_, prefix, n, d) => {
+      s = s.replace(/(^|[^0-9\/.])(\d+)\s*\/\s*(\d+)(?![0-9\/])/g, (_, prefix, n, d) => {
         return `${prefix}<span class="math-frac"><span class="num">${n}</span><span class="den">${d}</span></span>`;
       });
+      // 키패드로 분모를 아직 안 눌렀을 때(예: "3/")도 세로 분수 모양으로 (분모 자리 □)
+      s = s.replace(/(^|[^0-9\/.])(\d+)\/$/, (_, prefix, n) => `${prefix}<span class="math-frac"><span class="num">${n}</span><span class="den" style="opacity:.45">□</span></span>`);
       return s;
     }
 
@@ -1370,7 +1389,7 @@
       const runs = lay.chasm ? [[0.15, lay.chasm.d0], [lay.chasm.d1, L - 0.15]] : [[0.15, L - 0.15]];
       const SW = 0.75, xi = W / 2 - 0.14;
       runs.forEach(([a, b]) => { if (b - a > 0.2) { seams.push({ dir: 'xNeg', x: -xi, a, b }); seams.push({ dir: 'xPos', x: xi, a, b }); } });
-      seams.push({ dir: 'dPos', d: 0.14, a: -xi, b: xi });
+      seams.push({ dir: 'dPos', d: lay.hasEntrance ? 0.16 : 0.14, a: -xi, b: xi });
       if (floorOK(L - 0.5)) seams.push({ dir: 'dNeg', d: L - 0.14, a: -xi, b: xi });
       (lay.rects || []).forEach(rc => {
         if (!['wall', 'partition', 'gateWall', 'niche'].includes(rc.kind)) return;
@@ -1734,20 +1753,25 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const str = String(labelStr);
-      const fracMatch = str.match(/^(\d+)\/(\d+)$/);
-      const mixedMatch = str.match(/^(\d+)과\s*(\d+)\/(\d+)$/);
+      // 분수는 항상 세로 분수로 (뒤에 단위가 붙어도: 3/4 m, 1과 2/5 L)
+      const fracMatch = str.match(/^(\d+)\/(\d+)\s*([^\d\/]{0,4})$/);
+      const mixedMatch = str.match(/^(\d+)(?:과\s*|\s+)(\d+)\/(\d+)\s*([^\d\/]{0,4})$/);
       if (fracMatch) {
+        const unit = fracMatch[3] || '', ox = unit ? -14 : 0;
         ctx.font = '900 24px sans-serif';
-        ctx.fillText(fracMatch[1], 128, 72);
-        ctx.fillRect(104, 86, 48, 3);
-        ctx.fillText(fracMatch[2], 128, 103);
+        ctx.fillText(fracMatch[1], 128 + ox, 72);
+        ctx.fillRect(104 + ox, 86, 48, 3);
+        ctx.fillText(fracMatch[2], 128 + ox, 103);
+        if (unit) { ctx.font = '900 20px sans-serif'; ctx.fillText(unit, 170, 89); }
       } else if (mixedMatch) {
+        const unit = mixedMatch[4] || '', ox = unit ? -12 : 0;
         ctx.font = '900 30px sans-serif';
-        ctx.fillText(mixedMatch[1], 100, 88);
+        ctx.fillText(mixedMatch[1], 100 + ox, 88);
         ctx.font = '900 20px sans-serif';
-        ctx.fillText(mixedMatch[2], 146, 72);
-        ctx.fillRect(130, 86, 32, 3);
-        ctx.fillText(mixedMatch[3], 146, 102);
+        ctx.fillText(mixedMatch[2], 146 + ox, 72);
+        ctx.fillRect(130 + ox, 86, 32, 3);
+        ctx.fillText(mixedMatch[3], 146 + ox, 102);
+        if (unit) { ctx.font = '900 18px sans-serif'; ctx.fillText(unit, 178, 89); }
       } else {
         const size = str.length <= 3 ? 32 : (str.length <= 5 ? 28 : 22);
         ctx.font = `900 ${size}px sans-serif`;
@@ -2044,7 +2068,7 @@
 
     // ---------------------------------------------------------------- 공유 재질/기하
     function boxGeo(w, h, d, uvScale) {
-      const key = w.toFixed(2) + ':' + h.toFixed(2) + ':' + d.toFixed(2) + ':' + (uvScale ? 1 : 0);
+      const key = w.toFixed(4) + ':' + h.toFixed(4) + ':' + d.toFixed(4) + ':' + (uvScale ? 1 : 0);   // mm 단위 차이도 구분 (깜빡임 방지용 미세 크기 차)
       let geo = GEO_CACHE.get(key);
       if (!geo) {
         geo = new THREE.BoxGeometry(w, h, d);
@@ -2245,7 +2269,10 @@
       rGroup.position.set(cx, 0, z0);
       const disposables = [];
       const at = (mesh, x, y, d) => { mesh.position.set(x, y, -d); rGroup.add(mesh); return mesh; };
-      const box = (w, h, dd, mat, x, y, d, uv) => at(new THREE.Mesh(boxGeo(w, h, dd, uv), mat), x, y, d);
+      // V6.2: 상자마다 크기를 0~4 mm씩 다르게 → 서로 맞닿은 상자의 면이 정확히 같은 평면에 겹쳐 깜빡이는 일을 막는다
+      const BOX_JIT = [0, 0.0016, 0.0032, 0.0008, 0.0024, 0.004, 0.0012];
+      let boxN = n * 3;
+      const box = (w, h, dd, mat, x, y, d, uv) => { const j = BOX_JIT[(boxN++) % BOX_JIT.length]; return at(new THREE.Mesh(boxGeo(w + j, h + j, dd + j, uv), mat), x, y, d); };
       const lootRng = Core.makeRng('loot', gameSeed, n);
 
       // ---- 바닥 / 천장
@@ -2275,8 +2302,8 @@
         at(abyss, 0, -3.5, (c.d0 + c.d1) / 2);
         box(W, 3.5, 0.12, mats.abyssWall, 0, -1.75, c.d0 + 0.06);
         box(W, 3.5, 0.12, mats.abyssWall, 0, -1.75, c.d1 - 0.06);
-        box(0.12, 3.5, c.d1 - c.d0, mats.abyssWall, -W / 2 + 0.06, -1.75, (c.d0 + c.d1) / 2);
-        box(0.12, 3.5, c.d1 - c.d0, mats.abyssWall, W / 2 - 0.06, -1.75, (c.d0 + c.d1) / 2);
+        box(0.12, 3.5, c.d1 - c.d0 - 0.26, mats.abyssWall, -W / 2 + 0.06, -1.75, (c.d0 + c.d1) / 2);
+        box(0.12, 3.5, c.d1 - c.d0 - 0.26, mats.abyssWall, W / 2 - 0.06, -1.75, (c.d0 + c.d1) / 2);
       } else {
         floorPiece(0, L);
       }
@@ -2285,32 +2312,45 @@
       at(ceiling, 0, ROOM_H, L / 2);
 
       // ---- 외벽 (빈틈 없는 박스 벽)
-      box(0.28, ROOM_H, L + 0.28, mats.wall, -W / 2, ROOM_H / 2, L / 2, true);
-      box(0.28, ROOM_H, L + 0.28, mats.wall, W / 2, ROOM_H / 2, L / 2, true);
+      // V6.2: 입구가 있는 방은 옆벽을 입구 벽 안쪽(2 cm)부터 시작 → 옆벽 끝면이 앞 방 뒷벽 면에 겹쳐 깜빡이지 않게
+      const sw0 = lay.hasEntrance ? 0.02 : -0.14, sw1 = L + 0.14;
+      box(0.28, ROOM_H, sw1 - sw0, mats.wall, -W / 2, ROOM_H / 2, (sw0 + sw1) / 2, true);
+      box(0.28, ROOM_H, sw1 - sw0, mats.wall, W / 2, ROOM_H / 2, (sw0 + sw1) / 2, true);
       const wallAcrossWithGap = (d, gapX, gapW, lintel) => {
         const lw = (W / 2 + gapX) - gapW / 2, rw = (W / 2 - gapX) - gapW / 2;
         if (lw > 0.05) box(lw, ROOM_H, 0.28, mats.wall, -W / 2 + lw / 2, ROOM_H / 2, d, true);
         if (rw > 0.05) box(rw, ROOM_H, 0.28, mats.wall, W / 2 - rw / 2, ROOM_H / 2, d, true);
         if (lintel) box(gapW, ROOM_H - 3.6, 0.28, mats.wall, gapX, 3.6 + (ROOM_H - 3.6) / 2, d);
       };
+      // V6.2 깜빡임 수정: 앞 방의 출구 벽과 이 방의 입구 벽이 같은 자리에 겹쳐 두 벽면이 번갈아 보이던 문제(z-fighting)
+      // → 입구 벽을 이 방 안쪽으로 2 cm 옮겨 각 방에서는 항상 자기 벽면이 보이게 한다
       if (!lay.hasEntrance) box(W + 0.28, ROOM_H, 0.28, mats.wall, 0, ROOM_H / 2, 0, true);
-      else wallAcrossWithGap(0, 0, 2.4, true);
+      else wallAcrossWithGap(0.02, 0, 2.44, true);   // 문틈 옆면도 앞 방 벽 끝면과 겹치지 않게 2 cm 넓게
       if (lay.arch === 'escape') box(W + 0.28, ROOM_H, 0.28, mats.wall, 0, ROOM_H / 2, L, true);
       else wallAcrossWithGap(L, lay.exitX, 2.4, true);
 
       // 호텔 벽 하부 입체 패널 (공유 재질)
       for (const side of [-1, 1]) {
         const wx = side * (W / 2 - 0.185);
-        [[0.10, 0.16, mats.trimWood], [1.65, 0.12, mats.trimWood], [1.78, 0.035, mats.gold]].forEach(([y, h, m]) => box(0.09, h, L - 0.30, m, wx, y, L / 2));
+        [[0.10, 0.16, mats.trimWood], [1.65, 0.12, mats.trimWood], [1.78, 0.035, mats.gold]].forEach(([y, h, m]) => box(0.1, h, L - 0.30, m, wx - side * 0.005, y, L / 2));
       }
 
       // ---- 구조물 (배치도의 사각형·원 그대로 = 충돌 판정과 화면이 일치)
       const lowBeams = [];
+      let partIdx = 0;
       (lay.rects || []).forEach(rc => {
         const w = rc.hw * 2, dd = rc.hd * 2;
         switch (rc.kind) {
-          case 'wall': case 'partition': case 'gateWall':
-            box(w, ROOM_H, dd, mats.partition, rc.x, ROOM_H / 2, rc.d, true); break;
+          case 'wall': case 'partition': case 'gateWall': {
+            // V6.2 깜빡임 수정: 칸막이가 T자로 만나면 한 벽의 끝면이 다른 벽의 옆면과 같은 평면에 겹쳐 깜빡였다.
+            // → 화면용 상자만 길이는 양끝 몇 mm 줄이고 두께는 몇 mm 늘린다 (벽마다 조금씩 다르게). 충돌 판정은 배치도 그대로.
+            const k = partIdx++ % 4, e = 0.006 + 0.003 * k;
+            // 방 바깥벽 속으로 뻗은 부분은 그리지 않음 (옆 방 벽면과 같은 평면에 겹치는 것 방지)
+            const x0 = Math.max(rc.x - rc.hw, -W / 2), x1 = Math.min(rc.x + rc.hw, W / 2), d0 = Math.max(rc.d - rc.hd, 0), d1 = Math.min(rc.d + rc.hd, L);
+            const cw = x1 - x0, cd = d1 - d0; if (cw <= 0.02 || cd <= 0.02) break;
+            const along = cw >= cd;          // 긴 쪽 = 길이
+            box(along ? cw - 2 * e : cw + 2 * e, ROOM_H, along ? cd + 2 * e : cd - 2 * e, mats.partition, (x0 + x1) / 2, ROOM_H / 2, (d0 + d1) / 2, true); break;
+          }
           case 'niche':
             box(w, ROOM_H, dd, mats.wall, rc.x, ROOM_H / 2, rc.d, true); break;
           case 'nicheBack':
@@ -2387,7 +2427,7 @@
       });
       if (lay.dupeDoors) {
         // 문 세 개 위쪽 인방(문 뒤 감실 천장) — 벽이 뚫려 보이지 않게
-        box(W, ROOM_H - 3.6, L - lay.frontD, mats.wall, 0, 3.6 + (ROOM_H - 3.6) / 2, (lay.frontD + L) / 2);
+        box(W - 0.02, ROOM_H - 3.6, L - lay.frontD - 0.03, mats.wall, 0, 3.6 + (ROOM_H - 3.6) / 2, (lay.frontD + L) / 2);   // 앞뒤 벽면과 같은 평면에 겹치지 않게 살짝 안쪽
       }
 
       // ---- 벽 장식 (가구와 겹치지 않게 배치도에서 미리 자리 확인)
@@ -2465,7 +2505,7 @@
         if (across && !lay.maze) {
           for (const ex of [rc.x - rc.hw, rc.x + rc.hw]) {
             if (Math.abs(Math.abs(ex) - W / 2) < 0.35) continue;      // 바깥벽에 붙은 끝은 생략
-            const px = ex - Math.sign(ex - rc.x) * 0.15;
+            const px = ex - Math.sign(ex - rc.x) * 0.13;    // 벽 끝면과 같은 면에 겹치지 않게 2 cm 밖으로
             box(0.3, ROOM_H, 0.42, mats.trimWood, px, ROOM_H / 2, rc.d);
             box(0.42, 0.18, 0.5, mats.gold, px, 3.7, rc.d);
             box(0.4, 0.2, 0.48, mats.trimWood, px, 0.1, rc.d);
@@ -2481,10 +2521,11 @@
           const along = op.axis === 'x';                 // 가로 벽의 통로 → x 방향으로 열림
           const hw = op.w / 2;
           for (const sgn of [-1, 1]) {
-            const px = along ? op.x + sgn * (hw + 0.12) : op.x, pd = along ? op.d : op.d + sgn * (hw + 0.12);
+            // 문틀 기둥은 벽 끝면보다 2 cm 통로 쪽으로 (같은 면에 겹치면 움직일 때 깜빡임)
+            const px = along ? op.x + sgn * (hw + 0.10) : op.x, pd = along ? op.d : op.d + sgn * (hw + 0.10);
             box(along ? 0.24 : 0.44, 3.6, along ? 0.44 : 0.24, mats.trimWood, px, 1.8, pd);
           }
-          box(along ? op.w + 0.48 : 0.3, ROOM_H - 3.4, along ? 0.3 : op.w + 0.48, mats.partition, op.x, 3.4 + (ROOM_H - 3.4) / 2, op.d);   // 문 위 벽
+          box(along ? op.w - 0.04 : 0.3, ROOM_H - 3.4, along ? 0.3 : op.w - 0.04, mats.partition, op.x, 3.4 + (ROOM_H - 3.4) / 2, op.d);   // 문 위 벽 (양옆 벽과 겹치지 않게 통로 폭만큼만)
           box(along ? op.w + 0.6 : 0.46, 0.22, along ? 0.46 : op.w + 0.6, mats.trimWood, op.x, 3.5, op.d);                              // 상인방
           box(along ? op.w + 0.66 : 0.5, 0.05, along ? 0.5 : op.w + 0.66, mats.gold, op.x, 3.63, op.d);
         });
@@ -2504,7 +2545,7 @@
           for (const f of [-1, 1]) {
             const fx = along ? fd.x : fd.x + f * 0.24, fdd = along ? fd.d + f * 0.24 : fd.d;   // 몰딩(0.2)보다 앞에
             box(along ? 1.7 : 0.06, 3.0, along ? 0.06 : 1.7, mats.panelWood, fx, 1.5, fdd);
-            box(along ? 2.0 : 0.1, 0.16, along ? 0.1 : 2.0, mats.trimWood, fx, 3.06, fdd);
+            box(along ? 2.0 : 0.12, 0.16, along ? 0.12 : 2.0, mats.trimWood, fx, 3.06, fdd);
             box(along ? 0.14 : 0.1, 3.1, along ? 0.1 : 0.14, mats.trimWood, along ? fx - 0.93 : fx, 1.55, along ? fdd : fdd - 0.93);
             box(along ? 0.14 : 0.1, 3.1, along ? 0.1 : 0.14, mats.trimWood, along ? fx + 0.93 : fx, 1.55, along ? fdd : fdd + 0.93);
             for (const py of [0.85, 2.15]) box(along ? 1.2 : 0.05, 0.9, along ? 0.05 : 1.2, mats.trimWood, along ? fx : fx + f * 0.02, py, along ? fdd + f * 0.02 : fdd);
@@ -2751,6 +2792,13 @@
         if ((code === 'KeyC' || code === 'ControlLeft' || code === 'ControlRight') && isPlaying) {
           e.preventDefault();
           toggleCrouch();
+          return;
+        }
+
+        // V6.2 회복약 단축키 H (Heal)
+        if (code === 'KeyH' && isPlaying && !uiOpen.puzzle) {
+          e.preventDefault();
+          if (medkitsCount > 0) useMedkit(); else showToast('🩹 회복약이 없어요. 서랍에서 찾을 수 있어요.');
           return;
         }
 
@@ -3369,9 +3417,15 @@
       perf.frames = 0; perf.acc = 0; perf.checkT = 0;
       perf.lastFps = fps;
       const minR = window.__minRatio || perf.minRatio || 0.8, maxR = perf.maxRatio || 1.5;   // __minRatio: 자동 테스트(소프트웨어 렌더링)용
-      if (fps < 26 && !gfxUserSet && gfxQuality === 'high' && isPlaying && !window.__dtCap) { gfxQuality = 'lite'; applyGraphicsQuality(); }   // 먼저 무거운 효과를 끄고
-      else if (fps < 30 && perf.ratio > minR + 0.01) { perf.ratio = Math.max(minR, perf.ratio - 0.1); renderer.setPixelRatio(perf.ratio); }   // 그래도 느리면 해상도를 조금씩
-      else if (fps > 52 && perf.ratio < maxR - 0.01) { perf.ratio = Math.min(perf.ratio + 0.1, maxR); renderer.setPixelRatio(perf.ratio); }
+      // V6.2: 해상도가 3초마다 올라갔다 내려갔다 하면 움직일 때 화면이 깨졌다 선명해졌다 함 → 한 번 낮추면 20초 동안은 다시 올리지 않고,
+      //       올릴 때도 두 번 연속 넉넉할 때만
+      const now = performance.now();
+      if (fps < 26 && !gfxUserSet && gfxQuality === 'high' && isPlaying && !window.__dtCap) { gfxQuality = 'lite'; applyGraphicsQuality(); perf.lowerAt = now; }   // 먼저 무거운 효과를 끄고
+      else if (fps < 30 && perf.ratio > minR + 0.01) { perf.ratio = Math.max(minR, perf.ratio - 0.1); renderer.setPixelRatio(perf.ratio); perf.lowerAt = now; perf.goodRuns = 0; }   // 그래도 느리면 해상도를 조금씩
+      else if (fps > 55 && perf.ratio < maxR - 0.01 && now - (perf.lowerAt || -1e9) > 20000) {
+        perf.goodRuns = (perf.goodRuns || 0) + 1;
+        if (perf.goodRuns >= 2) { perf.ratio = Math.min(perf.ratio + 0.1, maxR); renderer.setPixelRatio(perf.ratio); perf.goodRuns = 0; }
+      } else perf.goodRuns = 0;
     }
 
     // =========================================================================
@@ -3556,7 +3610,8 @@
             if (!rushState.quizTriggered) {
               rushState.quizTriggered = true;
               playSfx('rushPass', 1.0);
-              triggerClosetLatchQuiz();
+              // V6.2 (선생님 피드백): 러쉬가 지나갈 때 걸쇠 문제는 내지 않는다 — 옷장에 숨었으면 그대로 지나감
+              showToast('🚪 숨죽인 사이 러쉬가 옷장 앞을 그대로 지나갔습니다.');
             }
           } else if (!rushState.hasHitPlayer) {
             rushState.hasHitPlayer = true;
@@ -4267,7 +4322,23 @@
     }
 
     // 피규어 심장박동: 정답 전에는 떠나지 않고, 정답 직후 6초 동안 안전
-    const hb = { level: 0.4, wrong: 0, prob: null, timer: null };
+    const hb = { level: 0.4, wrong: 0, prob: null, timer: null, countdown: null, remain: 0, total: 15 };
+    // V6.2 (선생님 피드백 '옷장에 숨었을 때 시간 초가 안 감'): 예전 막대는 심장박동 세기만 보여 줘서 멈춰 있는 시계처럼 보였다.
+    // → 문제마다 실제로 줄어드는 제한 시간(초)을 보여 주고, 시간이 다 되면 오답처럼 처리(피규어가 옷장을 흔듦)
+    function hbTotalSec() { return gameDifficulty === 'easy' ? 20 : (gameDifficulty === 'challenge' ? 12 : 16); }
+    function startHeartbeatCountdown() {
+      clearInterval(hb.countdown);
+      hb.total = hbTotalSec();
+      const deadline = performance.now() + hb.total * 1000;      // 실제 시간 기준 (화면이 느려져도 시간은 정확히 흐름)
+      const bar = document.getElementById('hb-bar'), secs = document.getElementById('hb-secs');
+      const draw = () => { hb.remain = Math.max(0, (deadline - performance.now()) / 1000); bar.style.width = (hb.remain / hb.total * 100) + '%'; secs.innerText = Math.ceil(hb.remain) + '초'; secs.className = hb.remain <= 5 ? 'text-rose-400 animate-pulse' : ''; };
+      draw();
+      hb.countdown = setInterval(() => {
+        if (!uiOpen.heartbeat) { clearInterval(hb.countdown); return; }
+        draw();
+        if (hb.remain <= 0) { clearInterval(hb.countdown); answerHeartbeat(false, true); }
+      }, 100);
+    }
     function startFigureHunt(curRoom) {
       if (figureState.hunt || !activeClosetObj) return;
       figureState.hunt = true;
@@ -4311,16 +4382,17 @@
         btn.onclick = () => answerHeartbeat(ch === hb.prob.a);
         box.appendChild(btn);
       });
-      document.getElementById('hb-bar').style.width = Math.round(hb.level * 100) + '%';
+      startHeartbeatCountdown();
     }
     function closeHeartbeat() {
       const m = document.getElementById('heartbeat-modal');
       m.classList.add('hidden'); m.classList.remove('flex');
-      clearTimeout(hb.timer);
+      clearTimeout(hb.timer); clearInterval(hb.countdown);
       if (uiOpen.heartbeat) setModalFlag('heartbeat', false);
     }
-    function answerHeartbeat(correct) {
+    function answerHeartbeat(correct, timedOut) {
       if (!uiOpen.heartbeat) return;
+      clearInterval(hb.countdown);
       if (correct) {
         playSfx('puzzleCorrect', 0.8);
         closeHeartbeat();
@@ -4339,7 +4411,7 @@
         playSfx('puzzleWrong', 0.7);
         playSfx('closetRattle', 0.9);
         player.shakeIntensity = Math.max(player.shakeIntensity, 0.8);
-        document.getElementById('hb-feedback').innerText = hb.wrong % 2 === 0 ? '피규어가 옷장을 내리쳤다! 다시 침착하게 계산해 보자.' : '숨소리가 커졌다… 다시 풀어 보자.';
+        document.getElementById('hb-feedback').innerText = (timedOut ? '시간이 다 됐다! ' : '') + (hb.wrong % 2 === 0 ? '피규어가 옷장을 내리쳤다! 다시 침착하게 계산해 보자.' : '숨소리가 커졌다… 다시 풀어 보자.');
         if (hb.wrong % 2 === 0) {
           applyPlayerHitEffect({ title: '🩸 피규어가 옷장을 내리쳤습니다!', desc: '정답을 맞혀야 피규어가 떠납니다.', knockDirX: 0, knockDirZ: 0, strength: 0, severity: 'light', lethal: false });
         }
@@ -5222,7 +5294,7 @@
         prob.cards.forEach((cVal, cIdx) => {
           const cardBtn = document.createElement('button');
           cardBtn.id = `drag-card-${cIdx}`;
-          cardBtn.className = "px-4 py-2 rounded-xl bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-200 border border-amber-400/40 font-black text-xs sm:text-sm transition";
+          cardBtn.className = "px-4 py-2 rounded-xl bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-200 border border-amber-400/40 font-black text-sm sm:text-base transition";
           cardBtn.innerHTML = formatMathHTML(cVal);
           cardBtn.onclick = () => selectDragCard(cVal, cIdx);
           cardsDiv.appendChild(cardBtn);
@@ -5285,7 +5357,7 @@
 
         const desc = document.createElement('div');
         desc.className = "text-xs sm:text-sm text-slate-300 text-center py-1 font-semibold";
-        desc.innerText = "숫자 키패드 또는 키보드로 답을 입력하고 [장치 작동]을 누르세요. 분수는 3/4처럼 입력합니다.";
+        desc.innerHTML = `숫자 키패드 또는 키보드로 답을 입력하고 [장치 작동]을 누르세요. 분수는 <b>분자 → [분수(/)] → 분모</b> 순서로 누르면 ${formatMathHTML('3/4')} 모양으로 바뀝니다.`;
         body.appendChild(desc);
       }
     }
@@ -5396,11 +5468,11 @@
           ? "p-3 rounded-xl border-2 border-amber-400 bg-amber-500/20 text-left transition flex flex-col gap-1"
           : "p-3 rounded-xl border-2 border-slate-700 bg-slate-900 text-left transition flex flex-col gap-1";
         btn.innerHTML = `
-          <span class="text-xs font-bold ${isActive ? 'text-amber-300' : 'text-slate-400'}">${b.label} ${isActive ? '(입력 중)' : ''}</span>
+          <span class="text-sm sm:text-base font-bold ${isActive ? 'text-amber-300' : 'text-slate-300'}">${formatMathHTML(b.label)} ${isActive ? '(입력 중)' : ''}</span>
           <span class="text-lg font-black text-white">${formatMathHTML(val)}</span>
         `;
       });
-      document.getElementById('active-slot-label').innerText = currentProblem.blanks[puzzleState.activeBlankIdx].label;
+      document.getElementById('active-slot-label').innerHTML = formatMathHTML(currentProblem.blanks[puzzleState.activeBlankIdx].label);
       document.getElementById('answer-display').innerHTML = formatMathHTML(typedAnswer);
     }
 
@@ -5439,7 +5511,7 @@
         if (!el) return;
         const v = puzzleState.slotValues[idx];
         el.innerHTML = `
-          <span class="text-xs text-slate-300 font-bold">${s.label}</span>
+          <span class="text-sm sm:text-base text-slate-200 font-bold">${formatMathHTML(s.label)}</span>
           <span class="px-3 py-1 rounded-lg ${v ? 'bg-amber-400 text-slate-950 font-black' : 'bg-slate-800 text-slate-400 font-semibold'} text-xs sm:text-sm">${v ? formatMathHTML(v) : '카드 선택'}</span>
         `;
       });
@@ -5617,7 +5689,7 @@
       const mBtn = document.getElementById('medkit-btn');
       if (medkitsCount > 0) {
         mBtn.classList.remove('hidden');
-        mBtn.innerText = `🩹 회복약(${medkitsCount})`;
+        mBtn.innerText = `🩹 회복약(${medkitsCount}) [H]`;
       } else {
         mBtn.classList.add('hidden');
       }

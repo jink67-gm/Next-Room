@@ -217,28 +217,22 @@ async def rush_hide_test():
         st = await g.state()
         if st['rush']['warning']: break
         await pg.wait_for_timeout(100)
-    # 경고가 들리면 옷장으로 → 걸쇠 문제에 일부러 틀린다
+    # 경고가 들리면 옷장으로 숨는다 → V6.2: 걸쇠 문제 없이 러쉬가 그대로 지나가야 한다
     r = await g.walk_to(c['x'], c['d'], tol=0.9, timeout=25)
     await g.key('KeyE')
-    em = False
-    for _ in range(200):
-        st = await g.state()
-        if st['ui']['emergency']: em = True; break
+    h0 = (await g.state())['hearts']
+    em = False; phases = set()
+    for _ in range(300):
+        st = await g.state(); phases.add(st['rush']['phase'])
+        if st['ui']['emergency']: em = True
+        if not st['rush']['active'] and not st['rush']['warning'] and 'SWEEPING' in phases: break
         await pg.wait_for_timeout(100)
-    record('rush: warning → reachable closet → latch quiz appears', em, f"walk={r} closet={st['closet']}")
-    h0 = st['hearts']
-    if em:
-        await g.answer_choice_modal('emergency', False)
-        phases = set()
-        for _ in range(80):
-            st = await g.state(); phases.add(st['rush']['phase'])
-            if st['closet'] == 'NONE' and not st['rush']['active']: break
-            await pg.wait_for_timeout(100)
-        await pg.wait_for_timeout(1800)
-        st = await g.state()
-        record('rush: wrong latch answer → rush returns, rattles, opens closet, hits', {'RETURNING_MOVE', 'RATTLING', 'OPENING_CLOSET'} <= phases | {'RETURNING_MOVE'} and st['hearts'] == h0 - 1 and st['closet'] == 'NONE', f'phases={sorted(phases)} hearts {h0}→{st["hearts"]}')
-        lp = st['player']
-        record('rush: player placed in front of the closet in the SAME room (no teleport)', st['door'] == dn and -st['room']['W'] / 2 < lp['x'] < st['room']['W'] / 2 and 0 < lp['d'] < st['room']['L'], str(lp))
+    st = await g.state()
+    record('rush: hidden in a closet → NO latch quiz while it passes (V6.2)', not em and st['closet'] == 'HIDDEN', f"walk={r} closet={st['closet']} phases={sorted(phases)}")
+    record('rush: sweeps past the hidden player with no damage', 'SWEEPING' in phases and st['hearts'] == h0, f"hearts {h0}→{st['hearts']}")
+    await g.key('KeyE'); await pg.wait_for_timeout(1200)
+    st = await g.state()
+    record('rush: player can leave the closet afterwards in the SAME room', st['door'] == dn and st['closet'] == 'NONE', str(st['player']))
     # Hide: stay in closet with no danger → knocks → ejected
     await pg.wait_for_timeout(5000)
     st = await g.state(); pl = st['player']
