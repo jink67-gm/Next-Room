@@ -114,6 +114,7 @@ async def figure_test():
         await pg.wait_for_timeout(150)
     record('figure: hiding while chased starts heartbeat', hb_open, f"closet={st['closet']} mode={st['figure']['mode']}")
     if hb_open:
+        await g.ev("() => { hearts = 3; updateHUD(); }")   # 앞방에서 다친 상태와 무관하게 심장박동 규칙만 확인
         h0 = (await g.state())['hearts']
         await g.answer_choice_modal('heartbeat', False)
         await pg.wait_for_timeout(600)
@@ -122,7 +123,7 @@ async def figure_test():
         await g.answer_choice_modal('heartbeat', False)
         await pg.wait_for_timeout(1700)
         st = await g.state()
-        record('figure: 2nd wrong answer → bang (−1 heart, non-lethal), still hunting', st['ui']['heartbeat'] and st['hearts'] == max(1, h0 - 1), f"hearts {h0}→{st['hearts']}")
+        record('figure: 2nd wrong answer → bang (−1 heart; V6.3: lethal at the last heart), still hunting', (st['ui']['heartbeat'] and st['hearts'] == h0 - 1) or (h0 == 1 and not st['playing']), f"hearts {h0}→{st['hearts']}")
         await g.answer_choice_modal('heartbeat', True)
         await pg.wait_for_timeout(500)
         st = await g.state()

@@ -128,7 +128,7 @@
       if (gcd(r, q) !== 1) return null;
       const total = R(w * q + r, q);
       const ans = rDiv(total, R(1, q));
-      return { unit: 1, gen: 'u1_mixed', params: [w, r, q], q: `${w}과 ${r}/${q} L를 1/${q} L씩 담으면 □병`, hint: `대분수를 가분수 ${w * q + r}/${q} 로 바꾸어 보세요.`, ans, unitLabel: '병', distract: [R(w * q, 1), R(w + r, 1), R(w * r + q, 1)] };
+      return { unit: 1, gen: 'u1_mixed', params: [w, r, q], q: `주스 ${w}과 ${r}/${q} L를 한 병에 1/${q} L씩 나누어 담으면 모두 몇 병이 될까요? □병`, hint: `대분수를 가분수 ${w * q + r}/${q} 로 바꾸어 보세요.`, ans, unitLabel: '병', distract: [R(w * q, 1), R(w + r, 1), R(w * r + q, 1)] };
     }
     // area ÷ side
     const b = rng.int(2, 8), a = rng.int(1, b - 1);
@@ -137,7 +137,7 @@
     const area = rMul(R(a, b), R(p, q));
     if (area.d > 60 || isInt(area)) return null;
     const ans = R(p, q);
-    return { unit: 1, gen: 'u1_area', params: [area.n, area.d, a, b], q: `넓이 ${fracStr(area)} m², 세로 ${a}/${b} m → 가로 □ m`, hint: '(가로) = (넓이) ÷ (세로)', ans, unitLabel: 'm', distract: [rMul(area, R(a, b)), rDiv(R(a, b), area), rAdd(ans, R(1, 1))], diagram: { kind: 'rectFrac', area: fracStr(area), side: `${a}/${b}` } };
+    return { unit: 1, gen: 'u1_area', params: [area.n, area.d, a, b], q: `넓이가 ${fracStr(area)} m²이고 세로가 ${a}/${b} m인 직사각형이 있습니다. 가로는 몇 m일까요? □ m`, hint: '(가로) = (넓이) ÷ (세로)', ans, unitLabel: 'm', distract: [rMul(area, R(a, b)), rDiv(R(a, b), area), rAdd(ans, R(1, 1))], diagram: { kind: 'rectFrac', area: fracStr(area), side: `${a}/${b}` } };
   };
   U1.blank = function (rng) {
     const b = rng.int(2, 9), d = rng.int(2, 9);
@@ -148,7 +148,7 @@
     return base(1, 'u1_blank', [a, b, c, d], {
       type: 'typeB_blank', q: '나눗셈을 곱셈으로 바꾸어 계산하세요.', hint: '나누는 분수의 분모와 분자를 바꿉니다.',
       equationTemplate: `${a}/${b} ÷ ${c}/${d} = ${a}/${b} × ${d}/①  = ②`,
-      blanks: [{ label: '① 바꾼 분수의 분모', answer: String(c), ans: R(c, 1) }, { label: '② 계산 결과', answer: fracStr(ans), ans }]
+      blanks: [{ label: '① 나누는 수를 뒤집은 분수의 분모', answer: String(c), ans: R(c, 1) }, { label: '② 계산 결과', answer: fracStr(ans), ans }]
     });
   };
   // ================================================================ UNIT 2
@@ -190,7 +190,7 @@
     const rem = R(scaled.n - fl * scaled.d, scaled.d);
     const up = rem.n * 2 >= rem.d;
     const ans = D(up ? fl + 1 : fl, 1);
-    return { unit: 2, gen: 'u2_round', params: [a, b], q: `${a} ÷ ${b} 의 몫을 반올림하여 소수 첫째 자리까지 □`, hint: '몫을 소수 둘째 자리까지 구한 뒤 둘째 자리에서 반올림합니다.', ans, mode: 'dec', distract: [D(up ? fl : fl + 1, 1), D(fl, 2), R(Math.floor(a / b), 1)] };
+    return { unit: 2, gen: 'u2_round', params: [a, b], q: `${a} ÷ ${b}의 몫을 반올림하여 소수 첫째 자리까지 나타내면 □입니다.`, hint: '몫을 소수 둘째 자리까지 구한 뒤 둘째 자리에서 반올림합니다.', ans, mode: 'dec', distract: [D(up ? fl : fl + 1, 1), D(fl, 2), R(Math.floor(a / b), 1)] };
   };
   U2.blank = function (rng) {
     if (rng.chance(0.5)) {
@@ -200,7 +200,7 @@
       return base(2, 'u2_blank_shift', [big, ab], {
         type: 'typeB_blank', q: '소수점을 똑같이 옮겨 계산하세요.', hint: '두 수의 소수점을 오른쪽으로 두 자리씩 옮깁니다.',
         equationTemplate: `${decStr(D(big, 2))} ÷ ${decStr(D(ab, 2))} = ① ÷ ${ab} = ②`,
-        blanks: [{ label: '① 바뀐 나누어지는 수', answer: String(big), ans: R(big, 1) }, { label: '② 몫', answer: String(q), ans: R(q, 1) }]
+        blanks: [{ label: '① 소수점을 옮긴 뒤의 나누어지는 수', answer: String(big), ans: R(big, 1) }, { label: '② 몫', answer: String(q), ans: R(q, 1) }]
       });
     }
     // 나누어 주고 남는 양
@@ -208,7 +208,7 @@
     if (remS % 10 === 0) return null;
     const total = D(n * q * 10 + remS, 1);
     return base(2, 'u2_blank_rem', [n * q * 10 + remS, n], {
-      type: 'typeB_blank', q: `${decStr(total)} kg을 ${n} kg씩 봉지에 담습니다.`, hint: '몫은 자연수까지만 구하고, 남는 양 = 전체 − (몫 × 한 봉지)',
+      type: 'typeB_blank', q: `쌀 ${decStr(total)} kg을 한 봉지에 ${n} kg씩 담습니다. 담을 수 있는 봉지 수와 남는 쌀의 양을 구하세요.`, hint: '몫은 자연수까지만 구하고, 남는 양 = 전체 − (몫 × 한 봉지)',
       equationTemplate: `${decStr(total)} ÷ ${n} → 봉지 ① 개, 남는 양 ② kg`,
       blanks: [{ label: '① 담을 수 있는 봉지 수', answer: String(q), ans: R(q, 1) }, { label: '② 남는 양 (kg)', answer: decStr(D(remS, 1)), ans: D(remS, 1) }]
     });
@@ -274,19 +274,19 @@
       const g = randomHeights(rng, 5);
       const ans = R(total(g), 1);
       const cells = g.flat().filter(x => x > 0).length;
-      return { unit: 3, gen: 'u3_top', params: g.flat(), q: '위에서 본 모양에 쌓은 개수를 썼습니다. 쌓기나무는 모두 □개', hint: '각 칸에 적힌 수를 모두 더합니다.', ans, unitLabel: '개', distract: [R(cells, 1), rAdd(ans, R(1, 1)), rSub(ans, R(1, 1))], diagram: { kind: 'topNumbers', grid: g } };
+      return { unit: 3, gen: 'u3_top', params: g.flat(), q: '그림은 위에서 본 모양이고, 각 칸의 수는 그 자리에 쌓은 쌓기나무 개수입니다. 쌓기나무는 모두 몇 개일까요? □개', hint: '각 칸에 적힌 수를 모두 더합니다.', ans, unitLabel: '개', distract: [R(cells, 1), rAdd(ans, R(1, 1)), rSub(ans, R(1, 1))], diagram: { kind: 'topNumbers', grid: g } };
     }
     if (v === 1) { // squares seen from front
       const g = randomHeights(rng, 5);
       const fv = frontView(g);
       const ans = R(fv.reduce((a, b) => a + b, 0), 1);
-      return { unit: 3, gen: 'u3_front', params: g.flat(), q: '앞에서 보면 보이는 정사각형 면은 모두 □개', hint: '앞에서 보면 세로줄마다 가장 높은 층만큼 보입니다.', ans, unitLabel: '개', distract: [R(total(g), 1), rAdd(ans, R(2, 1)), rSub(ans, R(1, 1))], diagram: { kind: 'topNumbers', grid: g, arrow: 'front' } };
+      return { unit: 3, gen: 'u3_front', params: g.flat(), q: '그림은 위에서 본 모양이고, 각 칸의 수는 쌓은 개수입니다. 앞에서 보면 정사각형 면이 모두 몇 개 보일까요? □개', hint: '앞에서 보면 세로줄마다 가장 높은 층만큼 보입니다.', ans, unitLabel: '개', distract: [R(total(g), 1), rAdd(ans, R(2, 1)), rSub(ans, R(1, 1))], diagram: { kind: 'topNumbers', grid: g, arrow: 'front' } };
     }
     if (v === 2) { // squares seen from right side
       const g = randomHeights(rng, 5);
       const sv = sideView(g);
       const ans = R(sv.reduce((a, b) => a + b, 0), 1);
-      return { unit: 3, gen: 'u3_side', params: g.flat(), q: '오른쪽 옆에서 보면 보이는 정사각형 면은 모두 □개', hint: '옆에서 보면 가로줄마다 가장 높은 층만큼 보입니다.', ans, unitLabel: '개', distract: [R(total(g), 1), R(frontView(g).reduce((a, b) => a + b, 0) === ans.n ? ans.n + 2 : frontView(g).reduce((a, b) => a + b, 0), 1), rAdd(ans, R(1, 1))], diagram: { kind: 'topNumbers', grid: g, arrow: 'side' } };
+      return { unit: 3, gen: 'u3_side', params: g.flat(), q: '그림은 위에서 본 모양이고, 각 칸의 수는 쌓은 개수입니다. 오른쪽 옆에서 보면 정사각형 면이 모두 몇 개 보일까요? □개', hint: '옆에서 보면 가로줄마다 가장 높은 층만큼 보입니다.', ans, unitLabel: '개', distract: [R(total(g), 1), R(frontView(g).reduce((a, b) => a + b, 0) === ans.n ? ans.n + 2 : frontView(g).reduce((a, b) => a + b, 0), 1), rAdd(ans, R(1, 1))], diagram: { kind: 'topNumbers', grid: g, arrow: 'side' } };
     }
     // minimum number (footprint all filled), from front & side views
     for (let t = 0; t < 30; t++) {
@@ -295,7 +295,7 @@
       const fp = [[1, 1, 1], [1, 1, 1], [1, 1, 1]];
       const { mn, mx } = minMaxCount(fp, fv, sv);
       if (!isFinite(mn) || mn === mx) continue;
-      return { unit: 3, gen: 'u3_min', params: fv.concat(sv), q: '위에서 본 9칸에 모두 쌓았습니다. 가장 적게 쓴 쌓기나무는 □개', hint: '앞·옆 모양을 동시에 만족하는 가장 작은 높이를 각 칸에 정해 보세요.', ans: R(mn, 1), unitLabel: '개', distract: [R(mx, 1), R(mn + 1, 1), R(9, 1)], diagram: { kind: 'views', front: fv, side: sv, footprint: fp } };
+      return { unit: 3, gen: 'u3_min', params: fv.concat(sv), q: '위에서 본 9칸에 모두 쌓았고, 앞·옆에서 본 모양은 그림과 같습니다. 가장 적게 쌓으면 몇 개일까요? □개', hint: '앞·옆 모양을 동시에 만족하는 가장 작은 높이를 각 칸에 정해 보세요.', ans: R(mn, 1), unitLabel: '개', distract: [R(mx, 1), R(mn + 1, 1), R(9, 1)], diagram: { kind: 'views', front: fv, side: sv, footprint: fp } };
     }
     return null;
   };
@@ -343,19 +343,19 @@
       const shownVals = vals.map((x, i) => (i === pos ? '□' : String(x)));
       const q = `${shownVals[0]} : ${shownVals[1]} = ${shownVals[2]} : ${shownVals[3]}`;
       const wrongAdd = pos === 3 ? R(a * k + (b - a), 1) : R(vals[pos] + 1, 1);
-      return { unit: 4, gen: 'u4_prop', params: [a, b, k, pos], q: q + '  □ = ?', hint: '외항의 곱과 내항의 곱은 같습니다.', ans, distract: [wrongAdd, R(vals[pos] * 2, 1), R(Math.max(1, vals[pos] - 1), 1)], diagram: { kind: 'proportion', text: q } };
+      return { unit: 4, gen: 'u4_prop', params: [a, b, k, pos], q: `비례식 ${q} 에서 □에 알맞은 수는?`, hint: '외항의 곱과 내항의 곱은 같습니다.', ans, distract: [wrongAdd, R(vals[pos] * 2, 1), R(Math.max(1, vals[pos] - 1), 1)], diagram: { kind: 'proportion', text: q } };
     }
     if (v === 1) { // 비례배분
       const [a, b] = coprimePair(rng, 1, 7), k = rng.int(3, 12);
       const T = (a + b) * k;
       const forFirst = rng.chance(0.5);
       const ans = R((forFirst ? a : b) * k, 1);
-      return { unit: 4, gen: 'u4_dist', params: [T, a, b, forFirst ? 0 : 1], q: `${T}개를 ${a} : ${b}의 비로 나누면 ${forFirst ? '앞' : '뒤'}의 몫은 □개`, unitLabel: '개', hint: `전체를 ${a} + ${b} = ${a + b} 칸으로 나눈 것 중 ${forFirst ? a : b} 칸입니다.`, ans, distract: [R((forFirst ? b : a) * k, 1), R(Math.round(T / 2), 1), rAdd(ans, R(k, 1))] };
+      return { unit: 4, gen: 'u4_dist', params: [T, a, b, forFirst ? 0 : 1], q: (() => { const nm = [['형과 동생이', '형은', '동생은'], ['언니와 동생이', '언니는', '동생은'], ['민지와 준호가', '민지는', '준호는'], ['1반과 2반이', '1반은', '2반은']][T % 4]; return `구슬 ${T}개를 ${nm[0]} ${a} : ${b}로 나누어 가지면 ${forFirst ? nm[1] : nm[2]} 몇 개를 가질까요? □개`; })(), unitLabel: '개', hint: `전체를 ${a} + ${b} = ${a + b} 칸으로 나눈 것 중 ${forFirst ? a : b} 칸입니다.`, ans, distract: [R((forFirst ? b : a) * k, 1), R(Math.round(T / 2), 1), rAdd(ans, R(k, 1))] };
     }
     // a : b with total & ratio (cookie problem) — find total from one part
     const [a, b] = coprimePair(rng, 2, 7), k = rng.int(2, 9);
     const ans = R((a + b) * k, 1);
-    return { unit: 4, gen: 'u4_total', params: [a, b, k], q: `가 : 나 = ${a} : ${b}, 가가 ${a * k}개이면 모두 □개`, hint: `가 ${a}칸이 ${a * k}개이므로 한 칸은 ${k}개입니다.`, ans, unitLabel: '개', distract: [R(b * k, 1), R(a * k + b, 1), R((a + b) * k + k, 1)] };
+    return { unit: 4, gen: 'u4_total', params: [a, b, k], q: `민지와 준호의 구슬 수의 비는 ${a} : ${b}입니다. 민지의 구슬이 ${a * k}개라면 두 사람의 구슬은 모두 몇 개일까요? □개`, hint: `민지의 몫 ${a}칸이 ${a * k}개이므로 한 칸은 ${k}개입니다. 전체는 ${a} + ${b} = ${a + b}칸입니다.`, ans, unitLabel: '개', distract: [R(b * k, 1), R(a * k + b, 1), R((a + b) * k + k, 1)] };
   };
   U4.simplest = function (rng) {
     const kind = rng.int(0, 2);
@@ -412,8 +412,8 @@
     const cards = rng.shuffle([A, B, String(Math.round(T / 2) === a * k || Math.round(T / 2) === b * k ? T - 1 : Math.round(T / 2)), String(a * k + b)].filter((v, i, arr) => arr.indexOf(v) === i));
     if (cards.length < 4) return null;
     return base(4, 'u4_cards', [T, a, b], {
-      type: 'typeC_drag', q: `${T}개를 가와 나에게 ${a} : ${b}의 비로 나누어 줍니다.`, hint: `전체 ${a + b}칸 중 가는 ${a}칸, 나는 ${b}칸입니다.`,
-      slots: [{ label: '가가 받는 개수', answer: A }, { label: '나가 받는 개수', answer: B }], cards
+      type: 'typeC_drag', q: `사탕 ${T}개를 가 모둠과 나 모둠에게 ${a} : ${b}로 나누어 줍니다. 각 모둠이 받는 개수를 카드에서 골라 놓으세요.`, hint: `전체 ${a + b}칸 중 가 모둠은 ${a}칸, 나 모둠은 ${b}칸입니다.`,
+      slots: [{ label: '가 모둠이 받는 개수', answer: A }, { label: '나 모둠이 받는 개수', answer: B }], cards
     });
   };
 
@@ -580,7 +580,7 @@
   const TYPE_TABLE = {
     1: { A: r => numericMatch(1, 'u1_match', r, x => U1.core(x, x.int(0, 2)), '나눗셈 식과 몫을 연결하세요.', '나누는 분수의 분모와 분자를 바꾸어 곱합니다.'), B: U1.blank, C: r => cardsFromCores(1, 'u1_cards', r, x => U1.core(x, x.int(0, 2)), '두 식의 몫을 카드에서 골라 배치하세요.', '분수의 나눗셈은 나누는 수의 역수를 곱합니다.'), F: r => U1.core(r), E: r => U1.core(r) },
     2: { A: r => numericMatch(2, 'u2_match', r, x => U2.core(x, x.int(0, 3)), '나눗셈 식과 몫을 연결하세요.', '두 수의 소수점을 같은 자리만큼 옮깁니다.'), B: U2.blank, C: r => cardsFromCores(2, 'u2_cards', r, x => U2.core(x, x.int(0, 3)), '두 식의 몫을 카드에서 골라 배치하세요.', '나누는 수를 자연수로 만들면 쉬워집니다.'), F: r => U2.core(r), E: r => U2.core(r) },
-    3: { A: U3.match, D: U3.voxel, F: r => U3.core(r), E: r => U3.core(r), C: r => { const g = randomHeights(r, 5); const f = frontView(g).reduce((a, b) => a + b, 0), s = sideView(g).reduce((a, b) => a + b, 0), t = total(g); if (f === s) return null; const cards = r.shuffle([String(f), String(s), String(t), String(Math.max(f, s) + 1)].filter((v, i, a) => a.indexOf(v) === i)); if (cards.length < 4) return null; return base(3, 'u3_cards', g.flat(), { type: 'typeC_drag', q: '위에서 본 모양에 쌓은 개수를 썼습니다. 보이는 면의 수를 배치하세요.', hint: '앞에서는 세로줄, 옆에서는 가로줄의 가장 높은 층이 보입니다.', slots: [{ label: '앞에서 본 정사각형 수', answer: String(f) }, { label: '오른쪽 옆에서 본 정사각형 수', answer: String(s) }], cards, diagram: { kind: 'topNumbers', grid: g, arrow: 'both' } }); } },
+    3: { A: U3.match, D: U3.voxel, F: r => U3.core(r), E: r => U3.core(r), C: r => { const g = randomHeights(r, 5); const f = frontView(g).reduce((a, b) => a + b, 0), s = sideView(g).reduce((a, b) => a + b, 0), t = total(g); if (f === s) return null; const cards = r.shuffle([String(f), String(s), String(t), String(Math.max(f, s) + 1)].filter((v, i, a) => a.indexOf(v) === i)); if (cards.length < 4) return null; return base(3, 'u3_cards', g.flat(), { type: 'typeC_drag', q: '그림은 위에서 본 모양이고 칸의 수는 쌓은 개수입니다. 앞과 옆에서 보이는 정사각형 수를 카드에서 골라 놓으세요.', hint: '앞에서는 세로줄, 옆에서는 가로줄의 가장 높은 층이 보입니다.', slots: [{ label: '앞에서 본 정사각형 수', answer: String(f) }, { label: '오른쪽 옆에서 본 정사각형 수', answer: String(s) }], cards, diagram: { kind: 'topNumbers', grid: g, arrow: 'both' } }); } },
     4: { A: U4.match, B: r => (r.chance(0.5) ? U4.blank(r) : U4.bridge(r)), C: U4.cards, F: r => U4.core(r), E: r => (r.chance(0.3) ? U4.dupeRatio(r) : U4.core(r)) },
     5: { A: U5.match, B: U5.blank, C: U5.cards, F: r => U5.core(r), E: r => U5.core(r) },
     6: { A: U6.match, C: r => (r.chance(0.45) ? U6.sorter(r) : U6.cards(r)), F: r => U6.core(r), E: r => U6.core(r) }
@@ -767,9 +767,9 @@
       rng => { const a = rng.int(2, 9), b = rng.int(2, 9), k = rng.int(2, 5); if (a === b) return null;
         return { q: `${a} : □ = ${a * k} : ${b * k}`, a: String(b), w: [String(b * k), String(b + 1)] }; },
       rng => { const p = rng.int(1, 4), q = rng.int(1, 4), u = rng.int(3, 9); if (p === q || gcdI(p, q) !== 1) return null; const t = (p + q) * u, front = rng.chance(0.5);
-        return { q: `${t}개를 ${p} : ${q}의 비로 나누면 ${front ? '앞' : '뒤'}의 몫은 □개`, a: String((front ? p : q) * u), w: [String((front ? q : p) * u), String(t / 2 === Math.floor(t / 2) && t / 2 !== p * u && t / 2 !== q * u ? t / 2 : (front ? p : q) * u + u)], unit: '개' }; },
+        return { q: `사탕 ${t}개를 형과 동생이 ${p} : ${q}로 나누어 가지면 ${front ? '형' : '동생'}은 □개`, a: String((front ? p : q) * u), w: [String((front ? q : p) * u), String(t / 2 === Math.floor(t / 2) && t / 2 !== p * u && t / 2 !== q * u ? t / 2 : (front ? p : q) * u + u)], unit: '개' }; },
       rng => { const a = rng.int(2, 6), b = rng.int(2, 6), k = rng.int(2, 4); if (a === b || gcdI(a, b) !== 1) return null;
-        return { q: `${a * k} : ${b * k} → 가장 간단한 자연수의 비 □`, a: `${a} : ${b}`, w: [`${b} : ${a}`, `${a} : ${a + b}`] }; },
+        return { q: `${a * k} : ${b * k}를 가장 간단한 자연수의 비로 나타내면 □`, a: `${a} : ${b}`, w: [`${b} : ${a}`, `${a} : ${a + b}`] }; },
       rng => { const a = rng.int(2, 6), b = rng.int(2, 6), k = rng.int(2, 4);
         return { q: `비례식 ${a} : ${b} = ${a * k} : ${b * k}에서 외항의 곱은 □`, a: String(a * b * k), w: [String(a * b * k + a), String(a * a * k)] }; }
     ],
@@ -803,7 +803,7 @@
         { q: '원뿔의 꼭짓점은 □개', a: '1', w: ['0', '2'], unit: '개' },
         { q: '원뿔의 밑면은 □개', a: '1', w: ['2', '0'], unit: '개' },
         { q: '원기둥의 옆면을 펼치면 □ 모양', a: '직사각형', w: ['원', '삼각형'] },
-        { q: '구를 어느 방향에서 보아도 □ 모양', a: '원', w: ['삼각형', '직사각형'] }])
+        { q: '구는 어느 방향에서 보아도 □ 모양입니다.', a: '원', w: ['삼각형', '직사각형'] }])
     ]
   };
   function makeDefense(unit, rng) {

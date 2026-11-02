@@ -193,7 +193,7 @@
   </div>
 
   <!-- 괴물 생존 수칙 & 탐험 조작법 모달 -->
-  <div id="guide-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[105] hidden justify-center items-center p-4">
+  <div id="guide-modal" class="fixed inset-0 bg-black/85 z-[105] hidden justify-center items-center p-4">
     <div class="bg-[#15111d] border-2 border-amber-500/70 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl text-left max-h-[90dvh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
         <h3 class="title-font text-xl sm:text-2xl text-amber-400">🕹️ 조작법 & 7대 괴물 생존 수칙</h3>
@@ -374,7 +374,7 @@
   <!-- 2. 인게임 HUD & 컨트롤 오버레이 -->
   <div id="game-hud" class="fixed inset-0 z-30 pointer-events-none hidden flex-col justify-between">
     <!-- 상단 상태바 & 탐험 인벤토리 -->
-    <div class="flex flex-wrap justify-between items-center gap-2 px-3 sm:px-5 py-2.5 bg-black/80 backdrop-blur-md border-b border-amber-500/30 pointer-events-auto">
+    <div class="flex flex-wrap justify-between items-center gap-2 px-3 sm:px-5 py-2.5 bg-black/80 border-b border-amber-500/30 pointer-events-auto">
       <div class="flex items-center gap-2 sm:gap-3">
         <div id="door-badge" class="bg-gradient-to-r from-amber-400 to-yellow-600 text-slate-950 font-black px-3 py-1 rounded-lg text-xs sm:text-sm shadow">
           DOOR 01 / 10
@@ -416,7 +416,7 @@
 
     <!-- 상단 중앙 단일 목표 배너 -->
     <div class="flex flex-col items-center px-3 mt-1">
-      <div id="objective-banner" class="bg-black/75 border border-amber-500/40 text-amber-200/95 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold backdrop-blur-md shadow-lg text-center max-w-lg transition-opacity duration-300">
+      <div id="objective-banner" class="bg-black/75 border border-amber-500/40 text-amber-200/95 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-lg text-center max-w-lg transition-opacity duration-300">
         주변을 살펴 단서를 찾고 잠긴 문을 여세요.
       </div>
     </div>
@@ -431,7 +431,7 @@
 
     <!-- 하단 컨트롤러: 좌측 가상 조이스틱 + 우측 시점 회전 보조 버튼 -->
     <div class="flex justify-between items-end px-4 sm:px-8 pb-4 sm:pb-6">
-      <div id="joystick-zone" class="pointer-events-auto relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-black/55 border-2 border-white/25 backdrop-blur-sm flex justify-center items-center shadow-xl">
+      <div id="joystick-zone" class="pointer-events-auto relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-black/55 border-2 border-white/25 flex justify-center items-center shadow-xl">
         <div class="text-[10px] text-white/35 font-bold absolute top-2">이동</div>
         <div id="joystick-knob" class="w-12 h-12 rounded-full bg-amber-400/90 border-2 border-white shadow-[0_0_15px_rgba(251,191,36,0.8)] transition-transform duration-75"></div>
       </div>
@@ -453,7 +453,7 @@
   </div>
 
   <!-- 3. 6가지 체험형 수학 퍼즐 모달 -->
-  <div id="puzzle-modal" class="fixed inset-0 z-40 bg-black/80 backdrop-blur-md hidden justify-center items-center p-2.5 sm:p-4">
+  <div id="puzzle-modal" class="fixed inset-0 z-40 bg-black/85 hidden justify-center items-center p-2.5 sm:p-4">
     <div class="w-full max-w-2xl bg-[#121621] border-2 border-amber-500/80 rounded-2xl p-4 sm:p-5 shadow-[0_0_60px_rgba(0,0,0,0.95)] flex flex-col gap-3 max-h-[94dvh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
         <div class="flex items-center gap-2 flex-wrap">
@@ -520,7 +520,7 @@
   </div>
 
   <!-- 4. 옷장 내부 러쉬 방어 모달 (오답 시 러쉬가 되돌아와 옷장 문을 여는 3D 연출과 연동) -->
-  <div id="emergency-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex-col justify-center items-center p-4">
+  <div id="emergency-modal" class="fixed inset-0 z-50 bg-black/80 hidden flex-col justify-center items-center p-4">
     <div class="w-full max-w-md bg-[#1a090d]/95 border-2 border-red-500 rounded-2xl p-5 text-center shadow-[0_0_50px_rgba(220,38,38,0.85)]">
       <div class="inline-block bg-red-600 text-white text-xs font-black px-3 py-0.5 rounded-full mb-2">
         CLOSET LATCH DEFENSE
@@ -560,7 +560,7 @@
   </div>
 
   <!-- 배경음악/효과음 개별 볼륨 설정 -->
-  <div id="audio-settings-modal" class="fixed inset-0 z-[140] hidden justify-center items-center p-4 bg-black/85 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="오디오 설정">
+  <div id="audio-settings-modal" class="fixed inset-0 z-[140] hidden justify-center items-center p-4 bg-black/85" role="dialog" aria-modal="true" aria-label="오디오 설정">
     <div class="bg-[#17131d] border-2 border-amber-400/60 rounded-2xl w-full max-w-md p-5 shadow-2xl">
       <div class="flex justify-between items-center mb-5"><h2 class="font-bold text-xl text-amber-300">🎵 오디오 설정</h2><button onclick="toggleAudioSettings(false)" class="text-white px-3 py-2 bg-slate-800 rounded-lg">✕ 닫기</button></div>
       <label class="flex items-center gap-2 mb-5 text-base"><input id="audio-muted-checkbox" type="checkbox" onchange="applyAudioMuteFromSettings(this.checked)" class="accent-amber-400 w-5 h-5"> 모든 소리 끄기</label>
@@ -2890,12 +2890,18 @@
       window.addEventListener('blur', () => resetAllInput());
       document.addEventListener('visibilitychange', () => { if (document.hidden) resetAllInput(); });
 
+      // 실제 손가락 터치는 touchstart로도 확인 (일부 태블릿 브라우저는 터치를 'mouse' 포인터로 보고함)
+      let lastTouchAt = -1e9;
+      window.addEventListener('touchstart', () => { lastTouchAt = window.__lastTouchAt = performance.now(); if (!touchMode) { touchMode = true; releaseMouseLook(); updateMouseLookHint(); } }, { passive: true, capture: true });
       window.addEventListener('pointerdown', (e) => {
+        const isTouch = e.pointerType === 'touch' || e.pointerType === 'pen' || performance.now() - lastTouchAt < 800;
+        if (isTouch && !touchMode) { touchMode = true; releaseMouseLook(); updateMouseLookHint(); }
+        else if (!isTouch && e.pointerType === 'mouse' && touchMode && !hasTouch) touchMode = false;
         if (!isPlaying) return;
         if (anyBlockingModalOpen()) return;
         if (e.pointerId === joyPointerId) return;
         if (e.target.closest('button') || e.target.closest('#joystick-zone') || e.target.closest('#puzzle-modal') || e.target.closest('#emergency-modal') || e.target.closest('#heartbeat-modal') || e.target.closest('#game-hud .pointer-events-auto')) return;
-        if (canMouseLook && e.pointerType === 'mouse' && !window.__noPointerLock) { requestMouseLook(); return; }   // 클릭 = 마우스 둘러보기 켜기
+        if (!isTouch && canMouseLook && e.pointerType === 'mouse' && !window.__noPointerLock) { requestMouseLook(true); if (mouseLockPending()) return; }   // 마우스 클릭 = 마우스 둘러보기 켜기 (잠금이 거절되면 끌기 방식)
         lookPointerId = e.pointerId;
         lastLookX = e.clientX;
         lastLookY = e.clientY;
@@ -2983,15 +2989,24 @@
     }
     // V6: 데스크톱은 게임 화면에서 마우스 포인터를 잠가 '마우스를 움직이기만 해도' 둘러보기 (Pointer Lock)
     const canMouseLook = !!(document.body.requestPointerLock || HTMLElement.prototype.requestPointerLock) && !(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    // V6.3: 태블릿(특히 '데스크톱 모드' 브라우저)·터치 노트북은 마우스 잠금이 걸리면 화면을 끌어 시점을 돌릴 수 없었다.
+    //       → 터치가 되는 기기는 시작할 때 자동으로 잠그지 않고, 화면을 손가락으로 만지는 순간 잠금을 풀고 '터치 모드'로 전환.
+    //         진짜 마우스로 화면을 클릭하면 다시 마우스 둘러보기.
+    const hasTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+    let touchMode = hasTouch;
     let mouseLocked = false;
-    function requestMouseLook() {
+    function requestMouseLook(fromMouseClick) {
+      if (fromMouseClick) touchMode = false;
+      if (touchMode) return;
       if (!canMouseLook || !isPlaying || anyBlockingModalOpen() || mouseLocked || window.__noPointerLock) return;
       try { const el = renderer && renderer.domElement; const r = (el || document.body).requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (_) { /* 브라우저가 거부하면 드래그 방식 유지 */ }
     }
+    function mouseLockPending() { return canMouseLook && !touchMode && !window.__noPointerLock; }
     function releaseMouseLook() { if (document.pointerLockElement) { try { document.exitPointerLock(); } catch (_) { /* */ } } }
     function updateMouseLookHint() {
       const h = document.getElementById('mouselook-hint'); if (!h) return;
-      const show = canMouseLook && isPlaying && !mouseLocked && !anyBlockingModalOpen() && !window.__noPointerLock;
+      const anyFine = !(window.matchMedia && !window.matchMedia('(any-pointer: fine)').matches);
+      const show = canMouseLook && anyFine && isPlaying && !mouseLocked && !anyBlockingModalOpen() && !window.__noPointerLock && !(touchMode && performance.now() - (window.__lastTouchAt || -1e9) < 60000);
       h.classList.toggle('hidden', !show);
     }
     document.addEventListener('pointerlockchange', () => { mouseLocked = !!document.pointerLockElement; updateMouseLookHint(); });
@@ -3431,7 +3446,7 @@
     // =========================================================================
     // 피격 · 3D 넉백 · 기절 · 블러 회복 연출
     // =========================================================================
-    // lethal:false → 오답·듀프처럼 '학습 실수'로 맞는 경우 마지막 생명은 남겨 둔다 (한 번의 오답으로 게임 종료 금지)
+    // lethal:false → 피해는 항상 1칸 (시즌별 강한 공격 배수 없음). V6.3부터 마지막 생명도 봐주지 않는다.
     // V6 시즌별 공격력: 시즌3(최종장) 러쉬·앰부쉬·피규어 2칸 (나머지·시즌1·2는 1칸)
     function monsterDamage(title) {
       const t = String(title || '');
@@ -3443,7 +3458,7 @@
     function applyPlayerHitEffect({ title, desc, knockDirX = 0, knockDirZ = 1, strength = 8.0, severity = 'heavy', lethal = true }) {
       playSfx('hitImpact');
       const dmg = lethal ? monsterDamage(title) : 1;
-      hearts = lethal ? Math.max(0, hearts - dmg) : Math.max(1, hearts - 1);
+      hearts = Math.max(0, hearts - dmg);   // V6.3 (선생님 피드백): 오답·듀프·심장박동도 봐주지 않음 — 생명이 0이 되면 쓰러진다
       if (dmg > 1) desc = (desc || "충격으로 시야가 흐려집니다.") + ` (강한 공격: 생명 −${dmg})`;
       showSoundCue('💥', '공격받음', 'all');
       updateHUD();
@@ -3776,14 +3791,11 @@
       screechState.lifeTimer = 0;
       screechState.maxLife = gameDifficulty === 'easy' ? 10.5 : (gameDifficulty === 'challenge' ? 7.5 : 9.0);
 
-      const angleOffset = (Math.random() > 0.5 ? 1 : -1) * (1.2 + Math.random() * 1.6);
-      const spawnAngle = player.yaw + angleOffset;
-      const spawnDist = 3.2 + Math.random() * 1.8;
-      let sx = player.x - Math.sin(spawnAngle) * spawnDist;
-      let sz = player.z - Math.cos(spawnAngle) * spawnDist;
-      sx = Math.max(curRoom.centerX - 4.4, Math.min(curRoom.centerX + 4.4, sx));
-      sz = Math.max(curRoom.zEnd + 1.5, Math.min(curRoom.zStart - 1.5, sz));
-      const sy = 1.45 + Math.random() * 1.45;
+      // V6.3: 벽·칸막이 뒤에 숨어 안 보이던 문제 → 플레이어 곁(2~3 m)에서 벽에 가리지 않는 자리만 고르고, 플레이어를 따라다닌다
+      const spot = pickScreechSpot(curRoom, (Math.random() > 0.5 ? 1 : -1));
+      const sx = spot.x, sz = spot.z;
+      screechState.offAng = spot.ang; screechState.offDist = spot.dist; screechState.anchorYaw = player.yaw;
+      const sy = 1.45 + Math.random() * 1.0;
 
       screechState.x = sx;
       screechState.y = sy;
@@ -3808,8 +3820,40 @@
       ], 1);
     }
 
+    // 스크리치 자리: 플레이어 기준 각도·거리 후보 중 '방 안 + 장애물 밖 + 플레이어와 사이에 벽 없음'인 첫 자리
+    function screechSpotOK(room, wx, wz) {
+      const lay = room.layout, lx = wx - room.centerX, ld = room.zStart - wz;
+      if (Math.abs(lx) > lay.W / 2 - 0.5 || ld < 0.5 || ld > lay.L - 0.5) return false;
+      const st = roomCollisionState(room); st.crouch = false;
+      if (Core.pointBlocked(lay, lx, ld, 0.35, st)) return false;
+      const plx = player.x - room.centerX, pld = room.zStart - player.z;
+      for (let i = 1; i < 10; i++) { const t = i / 10; if (Core.pointBlocked(lay, plx + (lx - plx) * t, pld + (ld - pld) * t, 0.05, st)) return false; }
+      return true;
+    }
+    function pickScreechSpot(room, side) {
+      const tries = [];
+      for (const d of [2.6, 2.1, 3.2, 1.7]) for (const a of [1.6, 1.1, 2.1, 0.7, 2.6, 0.35]) for (const sg of [side, -side]) tries.push([sg * a, d]);
+      for (const [ang, dist] of tries) {
+        const A = player.yaw + ang, x = player.x - Math.sin(A) * dist, z = player.z - Math.cos(A) * dist;
+        if (screechSpotOK(room, x, z)) return { x, z, ang, dist };
+      }
+      const A = player.yaw; return { x: player.x - Math.sin(A) * 1.6, z: player.z - Math.cos(A) * 1.6, ang: 0, dist: 1.6 };   // 바로 앞
+    }
+    function screechFollow(dt) {
+      // 플레이어가 움직이면 같은 상대 위치(옆·뒤 2~3 m)로 따라온다. 그 자리가 벽 뒤가 되면 새 자리를 고른다.
+      const room = activeRooms[currentDoor]; if (!room) return;
+      const A = player.yaw * 0 + (screechState.anchorYaw === undefined ? (screechState.anchorYaw = player.yaw) : screechState.anchorYaw) + screechState.offAng;
+      let tx = player.x - Math.sin(A) * screechState.offDist, tz = player.z - Math.cos(A) * screechState.offDist;
+      if (!screechSpotOK(room, tx, tz)) {
+        const sp = pickScreechSpot(room, screechState.offAng >= 0 ? 1 : -1);
+        screechState.anchorYaw = player.yaw; screechState.offAng = sp.ang; screechState.offDist = sp.dist; tx = sp.x; tz = sp.z;
+      }
+      const k = Math.min(1, dt * 3.5);
+      screechState.x += (tx - screechState.x) * k; screechState.z += (tz - screechState.z) * k;
+    }
     function updateScreech3DAI(dt, now) {
       if (!screechState.active || !screechMonster3D) return;
+      if (!screechState.banishing && closetState === 'NONE' && !anyBlockingModalOpen()) screechFollow(dt);
 
       if (anyBlockingModalOpen() || closetState !== 'NONE') return;
 
@@ -4042,7 +4086,7 @@
       const lp = toLocal(curRoom, player.x, player.z);
       seekState.lx = 0; seekState.ld = -4.5;   // 입구 뒤쪽 어둠에서 솟아오름 (바로 붙잡지 않도록 거리 확보)
       seekState.trail = [{ x: lp.x, d: lp.d }];
-      seekState.speed = (gameDifficulty === 'easy' ? 3.85 : (gameDifficulty === 'challenge' ? 4.6 : 4.25)) * (SEASON === 3 ? 1.06 : (SEASON === 2 ? 1.03 : 1));
+      seekState.speed = (gameDifficulty === 'easy' ? 4.15 : (gameDifficulty === 'challenge' ? 4.95 : 4.6)) * (SEASON === 3 ? 1.06 : (SEASON === 2 ? 1.03 : 1));
       seekState.runCycle = 0;
       seekState.wrongDoorCooldown = 0;
       seekState.x = curRoom.centerX + seekState.lx; seekState.z = curRoom.zStart - seekState.ld;
@@ -4176,6 +4220,25 @@
       showSubtleSubtitle(["도서관 안쪽에서 무거운 발소리가 울린다. 소리에 민감한 것 같다…"], 1);
     }
 
+    // V6.3: 큰 소리(서랍 열기·장치 오답·장치 작동)는 멀리서도 들린다 → 피규어가 소리 난 곳으로 오거나, 가까우면 바로 쫓아옴
+    function figureHearNoise(wx, wz, radius, label) {
+      const room = activeRooms[currentDoor];
+      if (!figureState.active || !room || figureState.room !== room.doorNum || figureState.hunt) return;
+      if (figureState.mode === 'calm' && figureState.calmTimer > 2) return;     // 정답 직후 짧은 안전 시간만 예외
+      const lx = wx - room.centerX, ld = room.zStart - wz;
+      const sense = gameDifficulty === 'easy' ? 0.85 : (gameDifficulty === 'challenge' ? 1.2 : 1.0);
+      const dist = Math.hypot(lx - figureState.lx, ld - figureState.ld), R = radius * sense;
+      if (dist > R) return;
+      const lp = toLocal(room, player.x, player.z);
+      if (dist < R * 0.55 && closetState === 'NONE') {
+        if (figureState.mode !== 'chase') { playSfx('figureAlert', 0.9); showSoundCue('🩸', '피규어가 ' + label + ' 소리를 들었다!', cueSide(room.centerX + figureState.lx, room.zStart - figureState.ld)); }
+        figureSetMode('chase', lp); figureState.lostTimer = 0;
+      } else if (figureState.mode !== 'chase') {
+        figureSetMode('investigate', { x: lx, d: ld });
+        playSfx('figureGrowl', 0.6);
+        showSoundCue('🩸', label + ' 소리 쪽으로 피규어가 다가온다', cueSide(room.centerX + figureState.lx, room.zStart - figureState.ld));
+      }
+    }
     function figureSetMode(mode, target) {
       if (figureState.mode !== mode) figureState.path = null;
       figureState.mode = mode;
@@ -4196,14 +4259,14 @@
 
       // --- 감지: 발소리 반경(걷기 7.5 / 웅크림 2.2 / 삐걱 마루 9) + 바로 곁에서는 웅크려도 냄새·숨소리로 감지
       if (!hidden && figureState.mode !== 'hunt' && figureState.mode !== 'calm') {
-        const hear = player.noiseLevel * sense;
+        const hear = player.noiseLevel * sense;   // (문제를 푸는 동안 들키지 않았다면 조용함 — 들킨 뒤에는 문제를 풀어도 계속 쫓아옴, 오답 경보는 멀리까지 들림)
         if (dist < sniff || dist < hear) {
           if (figureState.mode !== 'chase') {
             playSfx('figureAlert', Math.min(1, 6 / Math.max(dist, 1)));
             showSoundCue('🩸', '피규어가 소리를 들었다!', cueSide(curRoom.centerX + figureState.lx, curRoom.zStart - figureState.ld));
             showSubtleSubtitle(['들켰다! 달리거나 옷장에 숨어야 한다!'], 1);
           }
-          figureSetMode('chase', lp);
+          if (figureState.mode !== 'chase') figureSetMode('chase', lp);   // 이미 쫓는 중이면 경로를 매 프레임 지우지 않음 (V6.3: 제자리에 멈춰 보이던 원인)
           figureState.lostTimer = 0;
         } else if (player.noiseLevel > 1 && dist < hear * 1.8 && figureState.mode === 'patrol') {
           figureSetMode('investigate', lp);
@@ -4226,7 +4289,7 @@
         if (hidden) {
           figureState.lostTimer += dt;
           if (figureState.lostTimer > 2.5) figureSetMode('search');
-        } else if (dist < sniff * 2.5 || player.noiseLevel > 1.5) {
+        } else if (dist < sniff * 2.5 || player.noiseLevel > 1.5 || uiOpen.puzzle) {   // 장치 앞에서 문제를 푸는 동안엔 놓치지 않고 계속 쫓아옴
           if (!figureState.target || Math.hypot(figureState.target.x - lp.x, figureState.target.d - lp.d) > 0.8) { figureState.target = { x: lp.x, d: lp.d }; figureState.path = null; }
           figureState.lostTimer = 0;
         } else {
@@ -4272,6 +4335,11 @@
       }
       // 책장·벽을 절대 통과하지 않도록 매 프레임 충돌 보정
       const fx = Core.resolvePoint(lay, figureState.lx, figureState.ld, 0.5, { crouch: true, exitOpen: false, bridged: true, deviceDone: true, gateOpen: false });
+      // V6.3: 벽·책장 모서리에 걸려 제자리걸음하면(쫓아오지 않는 것처럼 보임) 다음 경로점으로 넘기고 경로를 다시 찾는다
+      const realMove = Math.hypot(fx.x - (figureState.prevLx ?? fx.x), fx.d - (figureState.prevLd ?? fx.d));
+      if (moving && realMove < speed * dt * 0.25) { figureState.stuckT = (figureState.stuckT || 0) + dt; if (figureState.stuckT > 0.7) { figureState.stuckT = 0; if (figureState.path && figureState.path.length > 1) figureState.path.shift(); else figureState.path = null; figureState.pathTimer = 0; } }
+      else figureState.stuckT = 0;
+      figureState.prevLx = fx.x; figureState.prevLd = fx.d;
       figureState.lx = fx.x; figureState.ld = fx.d;
       figureState.x = figureState.lx; figureState.z = curRoom.zStart - figureState.ld;
       figMesh.position.set(figureState.lx, 0, -figureState.ld);
@@ -4308,7 +4376,7 @@
       }
 
       // --- 공격
-      if (figureState.mode === 'chase' && !hidden && dist < 1.45 && figureState.attackCooldown <= 0) {
+      if (figureState.mode === 'chase' && !hidden && dist < 1.75 && figureState.attackCooldown <= 0) {   // 팔이 닿는 거리 (가구 모서리 뒤라도 바로 곁이면 공격)
         figureState.attackCooldown = 3.0;
         if (uiOpen.puzzle) closePuzzleModal();
         const pushX = lp.x >= figureState.lx ? 1 : -1;
@@ -4886,6 +4954,7 @@
         dr.opened = true;
         playSfx('drawerOpen');
         player.noiseLevel = Math.max(player.noiseLevel, 5.0); // 서랍 소리는 피규어에게 들린다
+        figureHearNoise(dr.worldX, dr.worldZ, 18, '서랍 여는');
         if (dr.itemMesh && !dr.lootCollected) {
           dr.itemMesh.visible = true;
         }
@@ -5621,11 +5690,12 @@
         }
       } else {
         playSfx('puzzleWrong');
+        figureHearNoise(player.x, player.z, 12, '장치 경보');   // 오답 전류 소리
         closePuzzleModal();
         correctStreak = 0;
         applyPlayerHitEffect({
           title: "⚡ 보안 장치의 오답 전류가 방출되었습니다!",
-          desc: "생명이 1 남아 있으면 더 줄지 않습니다. 문제를 다시 확인하고 단서를 활용하세요.",
+          desc: "생명이 1칸 줄었습니다. 문제를 다시 확인하고 단서를 활용하세요.",
           knockDirX: 0,
           knockDirZ: 1,
           strength: 5.5,
@@ -6121,6 +6191,7 @@
 
     function finishGame(isWin) {
       isPlaying = false;
+      if (typeof closeHeartbeat === 'function') closeHeartbeat();
       releaseMouseLook(); updateMouseLookHint();
       clearAllMonsterTimers();
       closePuzzleModal();

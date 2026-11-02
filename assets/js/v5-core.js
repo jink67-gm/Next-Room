@@ -728,6 +728,9 @@
     block(s, L * 0.63);
     lay.rects.push(rect(0, L * 0.74, W / 2, 0.42, 'beam', { y0: 1.32, y1: 2.15, crouch: true }));
     block(-s, L * 0.86);
+    // V6.3: 복도가 길어진 만큼 장애물 하나씩 더 (관문 앞뒤)
+    block(-s, L * 0.44);
+    block(s, L * 0.56);
     lay.exitX = 0;
     lay.accent = { x: 0, d: L - 1.5, color: 0x9fd8ff, intensity: 2.2, range: 13 };
   };
@@ -765,7 +768,7 @@
   const DIMS = {
     guest: [12.5, 13.5, 18, 21], darkRoom: [13.5, 14.5, 20, 22], storage: [13, 14, 20, 22], grandHall: [16.5, 17.5, 22, 24],
     lCorridor: [14, 14.5, 20, 22], uCorridor: [14, 14.5, 21, 23], zigzag: [13.5, 14.5, 24, 27], slalom: [13, 14, 22, 25], maze: [20.5, 22, 20.5, 22.5], shortcutHall: [15, 15.5, 20, 22], secretWing: [15.5, 16, 20, 22],
-    keySearch: [20.5, 22, 21, 23], dupe: [16, 16, 21, 22], bridge: [13, 13.5, 24, 25], seek: [9.5, 9.5, 44, 44], library: [18, 18, 28, 28]
+    keySearch: [20.5, 22, 21, 23], dupe: [16, 16, 21, 22], bridge: [13, 13.5, 24, 25], seek: [9.5, 9.5, 56, 56], library: [18, 18, 28, 28]
   };
 
   function buildLayout(door, arch, seed, puzzle, attempt, safe, events) {
@@ -1097,7 +1100,7 @@
   }
   // A* with 8-neighbours and no corner cutting; returns local points
   function findPath(g, x0, d0, x1, d1) {
-    const s = nearestFree(g, x0, d0, 1.2), e = nearestFree(g, x1, d1, 1.2);
+    const s = nearestFree(g, x0, d0, 1.2), e = nearestFree(g, x1, d1, 1.2) >= 0 ? nearestFree(g, x1, d1, 1.2) : nearestFree(g, x1, d1, 2.2);   // V6.3: 목표가 가구에 붙어 있어도 가장 가까운 빈 칸까지는 온다
     if (s < 0 || e < 0) return null;
     const n = g.cols * g.rows;
     const gs = new Float32Array(n).fill(Infinity), came = new Int32Array(n).fill(-1), closed = new Uint8Array(n);
