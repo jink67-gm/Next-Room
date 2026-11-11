@@ -1,7 +1,7 @@
 """NEXT ROOM V5.1 + V7 — 학생 피드백·괴물 재설계 검증 (실제 키보드 조작)
 1) 돌풍 경고 중 다음 방으로 도망 → 돌풍이 따라와서 다음 방을 휩쓴다 (안전한 다음 방)
 2) 돌풍 경고 중 다음 방에 숨을 곳이 없으면(도서관) → 문 앞에서 막힘
-3) 메아리: 옷장 밖에서 손전등 끄고 멈추면 피해 없음 / 옷장에 숨거나 손전등을 켜면 들킴
+3) 메아리: 스위치로 방 불 끄고 멈추면 피해 없음(지나가면 불이 다시 켜짐) / 옷장에 숨거나 불을 켜 두면 들킴
 4) 오답이: 생명 1에서 가짜 문 → 사망 / 생명 2에서 두 번 → 사망
 """
 import asyncio, sys, json, math
@@ -77,21 +77,22 @@ async def gale_block(g, pg):
     record('block: after the gale the door lets the player through', st is not None)
 
 async def echo_trial(g, pg, mode):
-    """mode: 'still' = 옷장 밖에서 손전등 끄고 멈춤(안전) / 'closet' = 옷장에 숨음(들킴) / 'light' = 손전등 켜고 멈춤(들킴)"""
+    """mode: 'still' = 스위치로 방 불 끄고 멈춤(안전) / 'closet' = 불 끄고 옷장에 숨음(들킴) / 'light' = 불 켠 채 멈춤(들킴)"""
     seed, n = await find(g, 'echo'); g.log(f'echo[{mode}] seed={seed} door={n}')
     await begin(g, pg, seed, n)
     await g.ev("() => { clearTimeout(echoSpawnTimerId); clearTimeout(whisperSpawnTimerId); }")
     t = await g.targets(); pl = (await g.state())['player']
-    c = min(t['closets'], key=lambda c: math.hypot(c['x'] - pl['x'], c['d'] - pl['d']))
-    await walk_safe(g, c['x'], c['d'], g.log, tol=0.9)
+    sw = min(t['switches'], key=lambda s: math.hypot(s['x'] - pl['x'], s['d'] - pl['d']))
+    c = min(t['closets'], key=lambda c: math.hypot(c['x'] - sw['x'], c['d'] - sw['d']))
+    await walk_safe(g, sw['x'], sw['d'], g.log, tol=0.8)
     await g.ev("triggerEchoEvent()")
     st = await wait_for(g, pg, lambda s: s['echo']['warning'] or s['echo']['active'], n=400)
     record(f'echo[{mode}]: event starts in DOOR {n}', st is not None)
+    if mode != 'light':
+        await g.key('KeyE'); await pg.wait_for_timeout(300)   # 스위치로 방 불 끄기
+    record(f'echo[{mode}]: switch turns the room lights off', (await g.state())['echo']['lightsOff'] == (mode != 'light'))
     if mode == 'closet':
-        await g.key('KeyE')
-    want_light = mode == 'light'
-    if (await g.state())['flashlight'] != want_light:
-        await g.key('KeyF')
+        await walk_safe(g, c['x'], c['d'], g.log, tol=0.9); await g.key('KeyE')
     h0 = (await g.state())['hearts']; n_hits = len(await g.ev('window.__hits'))
     for i in range(900):
         st = await g.state()
@@ -100,11 +101,12 @@ async def echo_trial(g, pg, mode):
     st = await g.state(); hits = (await g.ev('window.__hits'))[n_hits:]
     titles = [h['title'] for h in hits]
     if mode == 'still':
-        record('echo: light off + standing still outside a closet → echo passes with no damage', st['playing'] and st['hearts'] == h0 and not titles, f"hearts {h0}→{st['hearts']} hits={titles}")
+        record('echo: room lights off + standing still outside a closet → echo passes with no damage', st['playing'] and st['hearts'] == h0 and not titles, f"hearts {h0}→{st['hearts']} hits={titles}")
+        record('echo: lights come back on by themselves after it passes', not st['echo']['lightsOff'])
     elif mode == 'closet':
         record('echo: hiding in a closet → heard and hit (closet breath)', any('옷장' in t for t in titles), f'hits={titles}')
     else:
-        record('echo: flashlight on → spotted and hit', any('손전등' in t for t in titles), f'hits={titles}')
+        record('echo: room lights left on → spotted and hit', any('방 불' in t for t in titles), f'hits={titles}')
 
 async def decoy_door(g, pg, hearts):
     seed, n = await find(g, 'decoy')

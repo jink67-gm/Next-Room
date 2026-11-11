@@ -2,14 +2,19 @@
 import math
 
 async def stand_still_for_echo(g, log):
-    """메아리: 옷장 밖에서 손전등을 끄고 가만히 서서 지나가길 기다린다."""
+    """메아리: 가장 가까운 벽 스위치로 방 불을 끄고, 옷장 밖에서 가만히 서서 지나가길 기다린다."""
     st = await g.state()
     if st['closet'] == 'HIDDEN':
         await g.key('KeyE'); await g.pg.wait_for_timeout(1000)
     st = await g.state()
-    if st['flashlight']:
-        await g.key('KeyF'); await g.pg.wait_for_timeout(100)
-    log('    🌀 echo → light off, standing still')
+    if not st['echo']['lightsOff']:
+        t = await g.targets(); p = st['player']
+        if t.get('switches'):
+            sw = min(t['switches'], key=lambda s: math.hypot(s['x'] - p['x'], s['d'] - p['d']))
+            await g.walk_to(sw['x'], sw['d'], tol=0.8, timeout=10)
+            await g.key('KeyE'); await g.pg.wait_for_timeout(300)
+    st = await g.state()
+    log(f"    🌀 echo → lights off={st['echo']['lightsOff']}, standing still")
     for _ in range(400):
         st = await g.state()
         if not st['playing'] or not (st['echo']['warning'] or st['echo']['active']): break

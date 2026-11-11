@@ -218,8 +218,8 @@
           <p class="mt-0.5 text-slate-300">불빛이 바람에 눕듯 흔들리고 <b>먼지가 한쪽으로 쓸려 가면</b> 돌풍이 옵니다. <b>옷장에 숨으면</b> 그대로 지나갑니다.</p>
         </div>
         <div class="bg-black/50 p-2.5 rounded-xl border border-teal-500/40">
-          <b class="text-teal-300">🌀 메아리 — 옷장 밖에서 손전등 끄고 멈추기</b>
-          <p class="mt-0.5 text-slate-300">방이 <b>청록빛으로 물들고 공명음</b>이 울리면 메아리가 옵니다. 메아리는 <b>빛·움직임·옷장 속 숨소리</b>를 찾습니다. 옷장에 숨지 말고, <b>손전등을 끄고 그 자리에 가만히</b> 서 있으세요.</p>
+          <b class="text-teal-300">🌀 메아리 — 스위치로 방 불 끄고 멈추기</b>
+          <p class="mt-0.5 text-slate-300">방이 <b>청록빛으로 물들고 공명음</b>이 울리면 메아리가 옵니다. 메아리는 <b>켜진 방 불·움직임·옷장 속 숨소리</b>를 찾습니다. 입구나 출구 옆 <b>벽 스위치(💡)로 방 불을 끄고</b>, 옷장 밖에서 가만히 서 있으세요. 메아리가 지나가면 불은 저절로 켜집니다.</p>
         </div>
         <div class="bg-black/50 p-2.5 rounded-xl border border-purple-500/40">
           <b class="text-purple-400">👁️ 속삭이 — 손전등 비추고 흔들기</b>
@@ -2778,8 +2778,25 @@
         rGroup.add(wardenMonsterMesh);
       }
 
+      // ---- 방 불 스위치 (메아리가 올 수 있는 방): 입구 벽과 출구 벽에 하나씩. 둘 다 같은 방 불을 끈다
+      const lightSwitches = [];
+      if (SWITCH_ARCHS.has(lay.arch)) {
+        const exitSide = lay.exitX > 0 ? -1 : 1;
+        const spots = [{ x: 1.85, d: 0.19, face: 1 }, { x: Math.max(-W / 2 + 0.5, Math.min(W / 2 - 0.5, lay.exitX + exitSide * 1.85)), d: lay.frontD - 0.19, face: -1 }];
+        for (const sp of spots) {
+          box(0.24, 0.36, 0.04, mats.trimWood || mats.wall, sp.x, 1.35, sp.d);
+          const toggle = new THREE.Mesh(boxGeo(0.06, 0.12, 0.05), new THREE.MeshBasicMaterial({ color: 0xfff1c9 }));
+          disposables.push(toggle.material);
+          const pivot = new THREE.Group();
+          pivot.add(toggle); toggle.position.set(0, 0.04, 0);
+          at(pivot, sp.x, 1.35, sp.d + (sp.face > 0 ? 0.035 : -0.035));
+          lightSwitches.push({ lx: sp.x, ld: sp.d, worldX: cx + sp.x, worldZ: z0 - sp.d, pivot });
+        }
+      }
+
       worldGroup.add(rGroup);
       return {
+        lightSwitches, lightsOff: false,
         doorNum: n, roomArch: lay.arch, plan, layout: lay, roomTypeLabel: seasonLabel(lay.arch) || plan.label || '🛏️ 객실 구역',
         group: rGroup, centerX: cx, roomW: W, roomLen: L, zStart: z0, zEnd: z0 - L, problem: info.problem,
         isDecoyRoom: !!lay.decoyDoors, isBridgeChasmRoom: !!lay.chasm, bridgeExtended: !lay.chasm,
@@ -3143,8 +3160,8 @@
       }
 
       if (curRoom && ambientLight && playerPointLight) {
-        if (hemiLight) hemiLight.intensity = curRoom.roomArch === 'darkRoom' ? (flashlightOn ? 0.08 : 0.02) : HEMI_BASE;
-        if (curRoom.roomArch === 'darkRoom') {
+        if (hemiLight) hemiLight.intensity = roomIsDark(curRoom) ? (flashlightOn ? 0.08 : 0.02) : HEMI_BASE;
+        if (roomIsDark(curRoom)) {
           ambientLight.intensity = flashlightOn ? 0.12 : 0.03;
           playerPointLight.intensity = flashlightOn ? 0.25 : 0.07;
           scene.fog.density = flashlightOn ? 0.045 : 0.085;
@@ -3978,8 +3995,8 @@
       document.getElementById('crosshair-dot').classList.remove('scale-150', 'bg-amber-300');
     }
 
-    // 3. 메아리(Echo) — 청록빛 공명음 예고 후 방을 천천히 한 번 지나가며 '빛'과 '움직임'과 '옷장 속 숨소리'를 찾는다
-    //    대처: 옷장에 숨지 말고, 손전등을 끄고 그 자리에 가만히 멈춰 선다.
+    // 3. 메아리(Echo) — 청록빛 공명음 예고 후 방을 천천히 한 번 지나가며 '켜진 방 불'과 '움직임'과 '옷장 속 숨소리'를 찾는다
+    //    대처: 벽 스위치로 방 불을 끄고, 옷장 밖에서 가만히 서 있는다. 메아리가 지나가면 불은 저절로 다시 켜진다.
     function triggerEchoEvent() {
       if (!isPlaying || echoState.warning || echoState.active || galeState.warning || galeState.active || inkState.active) return;
       if (uiOpen.puzzle || uiOpen.shelf || wardenState.hunt) { echoSpawnTimerId = setTimeout(triggerEchoEvent, 2500); return; }
@@ -3991,10 +4008,10 @@
       echoState.active = false;
 
       playSfx('echoWarn', 0.85);
-      showSoundCue('🌀', '청록빛 공명음 · 손전등 끄고 멈추기');
+      showSoundCue('🌀', '청록빛 공명음 · 스위치로 불 끄고 멈추기');
       showSubtleSubtitle([
-        "청록빛이 번지고 공명음이 울린다… 옷장은 숨소리가 울려 위험하다. 손전등을 끄고 멈춰 서자.",
-        "공명음이 방 안을 더듬는다… 빛과 움직임을 찾는 것 같다. 옷장 밖에서 불을 끄고 멈추자."
+        "청록빛이 번지고 공명음이 울린다… 벽의 스위치로 방 불을 끄고 가만히 있자.",
+        "공명음이 방 안을 더듬는다… 불빛과 움직임을 찾는 것 같다. 스위치를 찾아 불을 끄자."
       ], 1);
 
       // 예고: 깜빡이지 않고 청록빛이 숨 쉬듯 천천히 밝아졌다 어두워진다
@@ -4009,6 +4026,7 @@
         if (lastFlickRoom && lastFlickRoom !== fr) restoreRoomLights();
         lastFlickRoom = fr;
         pulseStep++;
+        if (fr.lightsOff) { fr.roomLight.intensity = 0.02; return; }   // 불을 끈 방은 어둡게 유지
         fr.roomLight.color.setHex(0x2dd4bf);
         fr.roomLight.intensity = fr.baseLightIntensity * (reducedMotion ? 0.6 : (0.6 + Math.sin(pulseStep * 0.2) * 0.3));
       }, 90);
@@ -4061,11 +4079,11 @@
 
       if (!echoState.passSound && dz < 12) { echoState.passSound = true; playSfx('echoPass', 1.0); }
 
-      const LISTEN = 9.0;   // 이 거리 안에서 빛·움직임·옷장 속 숨소리를 알아챈다
+      const LISTEN = 9.0;   // 이 거리 안에서 켜진 방 불·움직임·옷장 속 숨소리를 알아챈다
       if (dz < LISTEN && !echoState.hasHitThisPass) {
-        if (!echoState.cueShown) { echoState.cueShown = true; showSoundCue('🌀', '메아리가 듣고 있다 — 멈춤 · 손전등 끄기', 'all'); }
+        if (!echoState.cueShown) { echoState.cueShown = true; showSoundCue('🌀', '메아리가 듣고 있다 — 불 끄고 멈춤', 'all'); }
         const inCloset = closetState !== 'NONE';
-        const lit = flashlightOn && flashlightBattery > 0;
+        const lit = !roomIsDark(curRoom);
         const moving = movedSpeed > 0.5;
         if (inCloset || lit || moving) echoState.exposure += dt;
         else echoState.exposure = Math.max(0, echoState.exposure - dt * 0.6);
@@ -4077,8 +4095,8 @@
           if (inCloset) { exitClosetImmediate(); returnToRoomAudio(); }
           playSfx('echoReturn', 0.95);
           applyPlayerHitEffect({
-            title: inCloset ? "🌀 옷장 속 숨소리가 메아리쳐 들켰습니다!" : (lit ? "🌀 손전등 불빛을 메아리가 알아챘습니다!" : "🌀 움직이는 소리를 메아리가 알아챘습니다!"),
-            desc: "메아리가 지나갈 때는 옷장 밖에서 손전등을 끄고 가만히 멈춰 서야 합니다.",
+            title: inCloset ? "🌀 옷장 속 숨소리가 메아리쳐 들켰습니다!" : (lit ? "🌀 켜져 있는 방 불을 메아리가 알아챘습니다!" : "🌀 움직이는 소리를 메아리가 알아챘습니다!"),
+            desc: "메아리가 오면 벽의 스위치로 방 불을 끄고, 옷장 밖에서 가만히 서 있어야 합니다.",
             knockDirX: player.x >= curRoom.centerX ? 0.8 : -0.8,
             knockDirZ: echoState.dir * 0.5,
             strength: 10.0,
@@ -4094,7 +4112,8 @@
           curRoom.roomLight.color.setHex(seasonLight());
           curRoom.roomLight.intensity = curRoom.baseLightIntensity;
         }
-        showSubtleSubtitle([echoState.hasHitThisPass ? "공명음이 멀어진다…" : "공명음이 아무것도 찾지 못하고 멀어졌다… 이제 움직여도 된다."], 1);
+        if (curRoom.lightsOff) setRoomLightsOff(curRoom, false, true);   // 지나가면 불이 저절로 다시 켜진다
+        showSubtleSubtitle([echoState.hasHitThisPass ? "공명음이 멀어지고 불이 다시 켜졌다…" : "공명음이 아무것도 찾지 못하고 멀어졌다… 불이 다시 켜졌다."], 1);
         breathState.graceUntil = performance.now() + 4000;
         breathState.held = 0;
         returnToRoomAudio();
@@ -4876,6 +4895,16 @@
       }
       if (closetState !== 'NONE') return setProx('', '', '', null);
 
+      // 0. 메아리가 오는 중이면 방 불 스위치가 옷장보다 먼저
+      if (echoState.warning || echoState.active) {
+        for (const sw of (curRoom.lightSwitches || [])) {
+          if (Math.hypot(player.x - sw.worldX, player.z - sw.worldZ) < 2.3) {
+            if (curRoom.lightsOff) return setProx('switchOff', '💡', '불이 꺼졌다 — 메아리가 지나갈 때까지 가만히', () => showToast('💡 메아리가 지나가면 불이 저절로 켜집니다. 움직이지 마세요!'));
+            return setProx('switch', '💡', '[E / 터치] 스위치로 방 불 끄기', () => { setRoomLightsOff(curRoom, true); showSubtleSubtitle(['불을 껐다… 이제 숨죽이고 가만히 있자.'], 1); proxKey = ''; check3DProximity(); });
+          }
+        }
+      }
+
       // 1. 옷장 (단, 풀지 않은 단말기가 옷장보다 더 가까우면 단말기를 먼저)
       const danger = galeState.warning || galeState.active || echoState.warning || echoState.active || wardenState.hunt || (wardenState.active && wardenState.mode === 'chase');
       const boardD = (!danger && curRoom.boardWorldPos && !curRoom.puzzleSolved && curRoom.roomArch !== 'ink') ? Math.hypot(player.x - curRoom.boardWorldPos.x, player.z - curRoom.boardWorldPos.z) : 99;
@@ -5109,7 +5138,7 @@
       const carry = chaseInProgress();
       if (carry) {
         const next = currentDoor < maxDoors ? ensureRoomBuilt(currentDoor + 1) : null;
-        const unsafe = currentDoor >= maxDoors || !next || !next.closets.length || next.isBridgeChasmRoom || ['ink', 'library', 'bridge'].includes(next.roomArch);
+        const unsafe = currentDoor >= maxDoors || !next || !next.closets.length || next.isBridgeChasmRoom || ['ink', 'library', 'bridge'].includes(next.roomArch) || (carry === 'echo' && !(next.lightSwitches || []).length);
         if (unsafe) {
           const cur = activeRooms[currentDoor], lay = cur.layout;
           player.x = cur.centerX + lay.exitX;
@@ -5120,7 +5149,7 @@
             doorBlockMsgAt = now;
             playSfx('doorLocked', 0.9);
             showSoundCue('🔒', '문 너머에서 무언가 막고 있다', 'all');
-            showSubtleSubtitle([carry === 'gale' ? '문 너머에는 숨을 곳이 없다… 이 방 옷장에 숨어야 한다!' : '문이 열리지 않는다… 이 방에서 불을 끄고 멈춰 서야 한다!'], 1);
+            showSubtleSubtitle([carry === 'gale' ? '문 너머에는 숨을 곳이 없다… 이 방 옷장에 숨어야 한다!' : '문이 열리지 않는다… 이 방 스위치로 불을 끄고 멈춰 서야 한다!'], 1);
           }
           return;
         }
@@ -5154,7 +5183,7 @@
       scheduleRoomMonsterEvents(enteredRoom, carry);
       if (carry) {
         showSoundCue(carry === 'gale' ? '🌬️' : '🌀', '괴물이 따라오고 있다!', 'all');
-        showSubtleSubtitle([carry === 'gale' ? '바람이 멈추지 않는다… 이 방까지 따라온다! 옷장을 찾자!' : '공명음이 이 방까지 따라온다! 손전등을 끄고 멈춰 서자!'], 1);
+        showSubtleSubtitle([carry === 'gale' ? '바람이 멈추지 않는다… 이 방까지 따라온다! 옷장을 찾자!' : '공명음이 이 방까지 따라온다! 스위치로 불을 끄고 멈춰 서자!'], 1);
       }
     }
 
@@ -5820,9 +5849,24 @@
     // 미로 방에서는 옷장까지 돌아가는 길이 있어 경고 시간을 1.5초 더 준다 (V5.2)
     function mazeWarnBonus() { const r = activeRooms[currentDoor]; return r && r.layout && r.layout.maze ? 1500 : 0; }
     function restoreRoomLights() {
-      Object.values(activeRooms).forEach(r => { if (r.roomLight) { r.roomLight.color.setHex(seasonLight()); r.roomLight.intensity = r.baseLightIntensity; } });
+      Object.values(activeRooms).forEach(r => {
+        if (r.lightsOff) setRoomLightsOff(r, false, true);
+        if (r.roomLight) { r.roomLight.color.setHex(seasonLight()); r.roomLight.intensity = r.baseLightIntensity; }
+      });
       lastFlickRoom = null;
     }
+    // 메아리가 올 수 있는 방 (v5-core의 GALE_ARCHS와 같은 목록) — 이 방들에만 불 스위치를 단다
+    const SWITCH_ARCHS = new Set(['guest', 'storage', 'grandHall', 'lCorridor', 'uCorridor', 'shortcutHall', 'secretWing', 'darkRoom', 'keySearch', 'zigzag', 'slalom', 'maze']);
+    // 방 불 끄기/켜기: 스위치 손잡이를 내리고, 방 조명·주변광을 어둡게 (메인 루프가 lightsOff를 보고 주변광을 낮춘다)
+    function setRoomLightsOff(room, off, silent) {
+      if (!room) return;
+      room.lightsOff = off;
+      (room.lightSwitches || []).forEach(sw => { sw.pivot.rotation.x = off ? 0.9 : 0; });
+      if (room.roomLight) room.roomLight.intensity = off ? 0.02 : room.baseLightIntensity;
+      if (room.accentLight) room.accentLight.visible = !off;
+      if (!silent) playSfx('key', 0.9);
+    }
+    function roomIsDark(room) { return !!room && (room.lightsOff || room.roomArch === 'darkRoom'); }
     let lastFlickRoom = null;
     function clearAllMonsterTimers(keepChase) {
       clearTimeout(whisperSpawnTimerId);
@@ -6250,7 +6294,7 @@
           room: r ? { arch: r.roomArch, solved: r.puzzleSolved, unlocked: r.unlocked, bridged: r.bridgeExtended, deviceDone: r.deviceDone, gateOpen: r.gateOpen, keyUnlocked: r.keyUnlocked, keysNeeded: r.keysNeeded || 1, W: r.roomW, L: r.roomLen, events: r.plan.events, problemType: r.problem && r.problem.type, device: r.layout.device && r.layout.device.type } : null,
           warden: { active: wardenState.active, mode: wardenState.mode, hunt: wardenState.hunt, x: wardenState.lx, d: wardenState.ld },
           ink: { active: inkState.active, x: inkState.lx, d: inkState.ld, stagger: inkState.stagger },
-          gale: { warning: galeState.warning, active: galeState.active, phase: galeState.phase }, echo: { warning: echoState.warning, active: echoState.active },
+          gale: { warning: galeState.warning, active: galeState.active, phase: galeState.phase }, echo: { warning: echoState.warning, active: echoState.active, lightsOff: !!(activeRooms[currentDoor] && activeRooms[currentDoor].lightsOff) },
           whisper: { active: whisperState.active, x: whisperState.x, y: whisperState.y, z: whisperState.z, progress: whisperState.shakeProgress }, flashlight: flashlightOn, battery: flashlightBattery,
           visibleRooms: Object.keys(activeRooms).filter(k => activeRooms[k].group.visible).map(Number), builtRooms: Object.keys(activeRooms).map(Number),
           fps: perf.lastFps, pixelRatio: perf.ratio
@@ -6281,7 +6325,8 @@
           decoy: lay.decoyDoors ? lay.decoyDoors.map(dd => ({ x: dd.x, d: lay.frontD - 1.0, correct: dd.correct })) : null,
           closets: lay.closets.map(c => ({ x: c.access.x, d: c.access.d })),
           drawers: lay.drawers.map(dr => ({ x: dr.access.x, d: dr.access.d, loot: dr.loot })),
-          keyDrawer: lay.keyDrawer, gate: lay.gate
+          keyDrawer: lay.keyDrawer, gate: lay.gate,
+          switches: (r.lightSwitches || []).map(sw => { const a = Core.resolvePoint(lay, sw.lx, sw.ld + (sw.ld < 1 ? 1.0 : -1.0), Core.PLAYER_R, { crouch: true }); return { x: a.x, d: a.d }; })
         };
       }
     };
