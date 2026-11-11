@@ -5,9 +5,9 @@ root = Path(__file__).resolve().parent.parent
 html = (root / 'index.html').read_text(encoding='utf-8')
 # 1) local scripts / css exist and are referenced (no CDN dependency for core runtime)
 for src in ['assets/vendor/three.min.js', 'assets/js/audio-manager.js', 'assets/js/procedural-props.js', 'assets/js/monster-models-v2.js', 'assets/js/v5-core.js', 'assets/js/math-bank-v5.js']:
-    assert f'src="{src}"' in html, src
+    assert re.search(r'src="' + re.escape(src) + r'(\?v=\w+)?"', html), src
     assert (root / src).is_file(), src
-assert 'href="assets/css/tailwind.css"' in html and (root / 'assets/css/tailwind.css').stat().st_size > 10000
+assert re.search(r'href="assets/css/tailwind.css(\?v=\w+)?"', html) and (root / 'assets/css/tailwind.css').stat().st_size > 10000
 assert 'cdn.tailwindcss.com' not in html, 'tailwind runtime CDN should not be required'
 # script order: three -> props/models -> core -> bank -> inline game
 order = [html.index(x) for x in ['assets/vendor/three.min.js', 'procedural-props.js', 'v5-core.js', 'math-bank-v5.js', 'window.NextRoomDebug']]
