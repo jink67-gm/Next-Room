@@ -1,11 +1,11 @@
-/* MATH DOORS V5 — core logic (no Three.js dependency)
+/* NEXT ROOM V5 — core logic (no Three.js dependency)
  * - seeded random numbers
  * - stage event plan for 10 / 20 / 30 door modes
  * - room layout generator (logical layout: walls, furniture, devices)
  * - collision resolver shared by the game and the validator
- * - grid path search (reachability validation, Figure navigation)
+ * - grid path search (reachability validation, Warden navigation)
  * - checkpoint save/load
- * Works in the browser (window.MathDoorsCore) and in Node (module.exports) for automated tests.
+ * Works in the browser (window.NextRoomCore) and in Node (module.exports) for automated tests.
  */
 (function (root) {
   'use strict';
@@ -76,23 +76,23 @@
   // V5.2: 일자형 방이 줄어들도록 지그재그(zigzag)·엇갈린 벽(slalom)을 추가하고 두 번씩 넣어 자주 나오게 함
   // 미로형 객실층(maze)은 3배, 지그재그·엇갈린 벽은 1배 → 일자형 방이 드물게 나옴
   const FILLERS = ['guest', 'storage', 'grandHall', 'lCorridor', 'uCorridor', 'shortcutHall', 'secretWing', 'zigzag', 'slalom', 'maze', 'maze', 'maze', 'maze'];
-  const MEDIUM = ['dupe', 'bridge', 'keySearch'];
-  const HEAVY = ['library', 'seek'];
+  const MEDIUM = ['decoy', 'bridge', 'keySearch'];
+  const HEAVY = ['library', 'ink'];
   const SPECIAL = new Set(MEDIUM.concat(HEAVY));
   const ARCH_LABELS = {
     guest: '🛏️ 객실 구역', storage: '📦 화물 창고', grandHall: '🏛️ 중앙 장치 홀', lCorridor: '↪️ ㄱ자 굴절 복도',
     uCorridor: '🔀 ㄷ자 굽은 복도', shortcutHall: '🕳️ 지름길 · 우회로', secretWing: '🕯️ 비밀방이 있는 별관',
-    darkRoom: '🌑 암흑 구역', dupe: '🚪 갈림길 구역', bridge: '🌉 끊어진 다리 구역', keySearch: '🗝️ 열쇠 탐색 곁방',
-    seek: '👁️ 긴 복도 추격', library: '📚 고대 도서관',
+    darkRoom: '🌑 암흑 구역', decoy: '🚪 갈림길 구역', bridge: '🌉 끊어진 다리 구역', keySearch: '🗝️ 열쇠 탐색 곁방',
+    ink: '👁️ 긴 복도 추격', library: '📚 고대 도서관',
     zigzag: '〰️ 지그재그 복도', slalom: '🧱 엇갈린 벽 홀', maze: '🧭 미로 객실층'
   };
-  const RUSH_ARCHS = new Set(['guest', 'storage', 'grandHall', 'lCorridor', 'uCorridor', 'shortcutHall', 'secretWing', 'darkRoom', 'keySearch', 'zigzag', 'slalom', 'maze']);
+  const GALE_ARCHS = new Set(['guest', 'storage', 'grandHall', 'lCorridor', 'uCorridor', 'shortcutHall', 'secretWing', 'darkRoom', 'keySearch', 'zigzag', 'slalom', 'maze']);
 
   function stageConfig(N) {
     const mid = Math.max(4, Math.round(N / 2));
-    if (N <= 12) return { N, libs: [mid, N], seeks: [Math.max(3, N - 2)], counts: { dupe: 1, bridge: 1, keySearch: 1 }, dark: 1, maxRun: 2 };
-    if (N <= 24) return { N, libs: [mid, N], seeks: [Math.max(4, Math.round(N * 0.35))], counts: { dupe: 2, bridge: 2, keySearch: 2 }, dark: 2, maxRun: 1 };
-    return { N, libs: [mid, N], seeks: [Math.round(N * 0.27), Math.round(N * 0.77)], counts: { dupe: 3, bridge: 3, keySearch: 3 }, dark: 3, maxRun: 1 };
+    if (N <= 12) return { N, libs: [mid, N], inks: [Math.max(3, N - 2)], counts: { decoy: 1, bridge: 1, keySearch: 1 }, dark: 1, maxRun: 2 };
+    if (N <= 24) return { N, libs: [mid, N], inks: [Math.max(4, Math.round(N * 0.35))], counts: { decoy: 2, bridge: 2, keySearch: 2 }, dark: 2, maxRun: 1 };
+    return { N, libs: [mid, N], inks: [Math.round(N * 0.27), Math.round(N * 0.77)], counts: { decoy: 3, bridge: 3, keySearch: 3 }, dark: 3, maxRun: 1 };
   }
 
   function planStage(N, seed) {
@@ -102,7 +102,7 @@
       const arch = new Array(N + 1).fill(null);
       arch[1] = 'guest';
       cfg.libs.forEach(d => { arch[d] = 'library'; });
-      cfg.seeks.forEach(d => { if (!arch[d]) arch[d] = 'seek'; });
+      cfg.inks.forEach(d => { if (!arch[d]) arch[d] = 'ink'; });
       // mediums
       const mediums = [];
       Object.keys(cfg.counts).forEach(k => { for (let i = 0; i < cfg.counts[k]; i++) mediums.push(k); });
@@ -171,42 +171,42 @@
       let lastDanger = -9;
       for (let d = 1; d <= N; d++) {
         const a = arch[d];
-        const e = { rush: false, ambush: false, screech: false };
+        const e = { gale: false, echo: false, whisper: false };
         const recovering = d > 1 && HEAVY.includes(arch[d - 1]);
-        if (d >= 3 && RUSH_ARCHS.has(a) && !recovering && d - lastDanger >= 2) {
+        if (d >= 3 && GALE_ARCHS.has(a) && !recovering && d - lastDanger >= 2) {
           const r = rng.next();
           const pr = SEASON === 3 ? 0.46 : (SEASON === 2 ? 0.42 : 0.40), pa = SEASON === 3 ? 0.76 : (SEASON === 2 ? 0.66 : 0.62);
-          if (r < pr) e.rush = true;
-          else if (d >= 4 && r < pa) e.ambush = true;
-          if (e.rush || e.ambush) lastDanger = d;
+          if (r < pr) e.gale = true;
+          else if (d >= 4 && r < pa) e.echo = true;
+          if (e.gale || e.echo) lastDanger = d;
         }
-        if (a === 'darkRoom') e.screech = true;
-        else if (!e.rush && !e.ambush && !['seek', 'library', 'bridge'].includes(a) && d >= 2) e.screech = rng.chance(SEASON === 3 ? 0.36 : (SEASON === 2 ? 0.28 : 0.22));
+        if (a === 'darkRoom') e.whisper = true;
+        else if (!e.gale && !e.echo && !['ink', 'library', 'bridge'].includes(a) && d >= 2) e.whisper = rng.chance(SEASON === 3 ? 0.36 : (SEASON === 2 ? 0.28 : 0.22));
         plan.push({ door: d, arch: a, label: ARCH_LABELS[a], events: e, puzzle: puzzleKindFor(a) });
       }
-      // guarantee at least one rush and one ambush where possible
+      // guarantee at least one gale and one echo where possible
       const ensure = (key) => {
         if (plan.some(p => p && p.events[key])) return;
         for (let d = 3; d <= N; d++) {
           const p = plan[d];
-          if (!RUSH_ARCHS.has(p.arch) || p.events.rush || p.events.ambush) continue;
-          if (key === 'ambush' && d < 4) continue;
+          if (!GALE_ARCHS.has(p.arch) || p.events.gale || p.events.echo) continue;
+          if (key === 'echo' && d < 4) continue;
           const prev = plan[d - 1], next = plan[d + 1];
-          if ((prev && (prev.events.rush || prev.events.ambush)) || (next && (next.events.rush || next.events.ambush))) continue;
+          if ((prev && (prev.events.gale || prev.events.echo)) || (next && (next.events.gale || next.events.echo))) continue;
           if (prev && HEAVY.includes(prev.arch)) continue;
-          p.events[key] = true; p.events.screech = false; return;
+          p.events[key] = true; p.events.whisper = false; return;
         }
       };
-      ensure('rush'); ensure('ambush');
+      ensure('gale'); ensure('echo');
       return { seed, N, attempt, rooms: plan, config: cfg };
     }
     throw new Error('stage plan failed');
   }
 
   function puzzleKindFor(arch) {
-    if (arch === 'dupe') return 'dupe';
+    if (arch === 'decoy') return 'decoy';
     if (arch === 'bridge') return 'bridge';
-    if (arch === 'seek') return 'none';
+    if (arch === 'ink') return 'none';
     if (arch === 'keySearch') return 'door';
     if (arch === 'library') return 'terminal';
     return 'any';
@@ -231,8 +231,8 @@
     return {
       v: CORE_VERSION, door, arch, W, L, frontD: L, exitX: 0, hasEntrance: door > 1,
       rects: [], circles: [], closets: [], drawers: [], props: [], wallDecor: [],
-      terminal: null, device: null, chasm: null, gate: null, creaks: [], figure: null,
-      requiresKey: false, keyDrawer: -1, dupeDoors: null, secret: null, accent: null,
+      terminal: null, device: null, chasm: null, gate: null, creaks: [], warden: null,
+      requiresKey: false, keyDrawer: -1, decoyDoors: null, secret: null, accent: null,
       theme: arch === 'darkRoom' ? 'darkRoom' : (arch === 'library' ? 'library' : 'normal'),
       lightLevel: arch === 'darkRoom' ? 0.03 : (arch === 'library' ? 0.62 : 1.0),
       notes: []
@@ -293,7 +293,7 @@
     }
     // doorway clear zones
     const zones = [rect(0, 1.3, 1.9, 1.3, 'zone'), rect(lay.exitX, lay.frontD - 1.4, 1.9, 1.4, 'zone')];
-    if (lay.dupeDoors) lay.dupeDoors.forEach(dd => zones.push(rect(dd.x, lay.frontD - 1.4, 1.6, 1.4, 'zone')));
+    if (lay.decoyDoors) lay.decoyDoors.forEach(dd => zones.push(rect(dd.x, lay.frontD - 1.4, 1.6, 1.4, 'zone')));
     for (const z of zones) if (fpOverlap(cand, { shape: 'rect', o: z }, 0)) return false;
     for (const f of footprints(lay)) {
       if (f.o === o) continue;
@@ -577,7 +577,7 @@
     lay.exitX = 0;
     const lanes = [[0, ds[0]], [ds[0], ds[1]], [ds[1], ds[2]], [ds[2], L]];
     const mid = k => (lanes[k][0] + lanes[k][1]) / 2;
-    // 칸(레인)마다 옷장 1개 → 어느 칸에서 러쉬 경고가 들려도 가까운 곳에 숨을 수 있음
+    // 칸(레인)마다 옷장 1개 → 어느 칸에서 돌풍 경고가 들려도 가까운 곳에 숨을 수 있음
     placeCloset(lay, -s, [mid(0), mid(0) + 0.5, mid(0) - 0.5]);
     placeCloset(lay, -s, [mid(1), mid(1) - 0.6, mid(1) + 0.6]) || placeCloset(lay, s, [mid(1), mid(1) - 0.6]);
     placeCloset(lay, s, [mid(2), mid(2) - 0.6, mid(2) + 0.6]) || placeCloset(lay, -s, [mid(2), mid(2) + 0.6]);
@@ -676,12 +676,12 @@
     if (lay.keyDrawer >= 0) lay.drawers[lay.keyDrawer].loot = 'key';
     lay.notes.push('곁방 서랍 중 하나에 열쇠');
   };
-  BUILD.dupe = function (lay, rng) {
+  BUILD.decoy = function (lay, rng) {
     const W = lay.W;
     lay.frontD = lay.L - 0.9;
     const xs = [-4.0, 0, 4.0];
     const correct = rng.int(0, 2);
-    lay.dupeDoors = xs.map((x, i) => ({ x, correct: i === correct }));
+    lay.decoyDoors = xs.map((x, i) => ({ x, correct: i === correct }));
     lay.exitX = xs[correct];
     // niche side blocks between doors (from frontD to L, solid)
     const hd = (lay.L - lay.frontD) / 2, dc = (lay.frontD + lay.L) / 2;
@@ -709,7 +709,7 @@
     lay.terminal = { mode: 'stand', x: s * 1.6, d: d0 - 0.85, access: { x: s * 1.6, d: d0 - 1.85 }, foot: circle(s * 1.6, d0 - 0.85, 0.5, 'terminal') };
     placeProp(lay, 'lamp', -s * (W / 2 - 1.2), d1 + 2.5, 0.4);
   };
-  BUILD.seek = function (lay, rng) {
+  BUILD.ink = function (lay, rng) {
     const W = lay.W, L = lay.L;
     const s = rng.sign();
     const blockW = 4.0;
@@ -717,7 +717,7 @@
     block(s, L * 0.14);
     lay.rects.push(rect(0, L * 0.25, W / 2, 0.42, 'beam', { y0: 1.32, y1: 2.15, crouch: true }));
     block(-s, L * 0.36);
-    // gate with two doors: one lit (correct) and one dark (locked)
+    // gate with two doors: number plates are drawn by the game; the larger number is the open one
     const gd = L * 0.5;
     const gx = 2.25;
     const correctSide = rng.sign();
@@ -756,7 +756,7 @@
       const x = rng.range(-6.5, 6.5);
       lay.creaks.push(rect(x, d, 0.75, 0.55, 'creak'));
     }
-    lay.figure = {
+    lay.warden = {
       start: { x: 0, d: (rowB + rowC) / 2 },
       waypoints: [
         { x: -2.6, d: (rowA + rowB) / 2 }, { x: 2.6, d: (rowA + rowB) / 2 }, { x: 7.4, d: rowB },
@@ -768,7 +768,7 @@
   const DIMS = {
     guest: [12.5, 13.5, 18, 21], darkRoom: [13.5, 14.5, 20, 22], storage: [13, 14, 20, 22], grandHall: [16.5, 17.5, 22, 24],
     lCorridor: [14, 14.5, 20, 22], uCorridor: [14, 14.5, 21, 23], zigzag: [13.5, 14.5, 24, 27], slalom: [13, 14, 22, 25], maze: [20.5, 22, 20.5, 22.5], shortcutHall: [15, 15.5, 20, 22], secretWing: [15.5, 16, 20, 22],
-    keySearch: [20.5, 22, 21, 23], dupe: [16, 16, 21, 22], bridge: [13, 13.5, 24, 25], seek: [9.5, 9.5, 56, 56], library: [18, 18, 28, 28]
+    keySearch: [20.5, 22, 21, 23], decoy: [16, 16, 21, 22], bridge: [13, 13.5, 24, 25], ink: [9.5, 9.5, 56, 56], library: [18, 18, 28, 28]
   };
 
   function buildLayout(door, arch, seed, puzzle, attempt, safe, events) {
@@ -777,12 +777,12 @@
     const W = Math.round(rng.range(dm[0], dm[1]) * 10) / 10;
     const L = Math.round(rng.range(dm[2], dm[3]) * 10) / 10;
     const lay = newLayout(door, arch, W, L, rng);
-    if (!['dupe', 'lCorridor', 'uCorridor', 'zigzag', 'slalom', 'maze', 'seek', 'bridge'].includes(arch)) pickExitX(lay, rng);
+    if (!['decoy', 'lCorridor', 'uCorridor', 'zigzag', 'slalom', 'maze', 'ink', 'bridge'].includes(arch)) pickExitX(lay, rng);
     if (safe) {
       // guaranteed simple variant: only wall furniture
-      if (arch === 'dupe') BUILD.dupe(lay, rng);
+      if (arch === 'decoy') BUILD.decoy(lay, rng);
       else if (arch === 'bridge') BUILD.bridge(lay, rng);
-      else if (arch === 'seek') BUILD.seek(lay, rng);
+      else if (arch === 'ink') BUILD.ink(lay, rng);
       else if (arch === 'library') BUILD.library(lay, rng);
       else {
         lay.exitX = 0;
@@ -795,8 +795,8 @@
     } else {
       (BUILD[arch] || BUILD.guest)(lay, rng);
     }
-    // rush / ambush rooms: a closet in each half of the room so hiding is always fair
-    if (events && (events.rush || events.ambush) && !lay.chasm) {
+    // gale / echo rooms: a closet in each half of the room so hiding is always fair
+    if (events && (events.gale || events.echo) && !lay.chasm) {
       const near = lay.closets.some(c => c.d < lay.L * 0.5), far = lay.closets.some(c => c.d >= lay.L * 0.5);
       const fr = [0.25, 0.3, 0.2, 0.35, 0.4], br = [0.72, 0.78, 0.66, 0.84, 0.6];
       if (!near) placeCloset(lay, 1, fr.map(f => f * lay.L)) || placeCloset(lay, -1, fr.map(f => f * lay.L));
@@ -807,7 +807,7 @@
     lay.puzzleKind = p.kind;
     if (p.kind === 'bridge' || arch === 'bridge') {
       lay.device = { type: 'bridge' };
-    } else if (p.kind === 'dupe') {
+    } else if (p.kind === 'decoy') {
       placeTerminal(lay, 'stand', standCandidates(lay));
     } else if (p.kind === 'none') {
       lay.terminal = null;
@@ -854,7 +854,7 @@
   }
   function standCandidates(lay) {
     const L = lay.frontD;
-    // 도서관: 단말기는 순찰 구역 너머 안쪽 끝 → 피규어를 피해 몰래 지나가야 함
+    // 도서관: 단말기는 순찰 구역 너머 안쪽 끝 → 사서를 피해 몰래 지나가야 함
     if (lay.arch === 'library') return [2.4, -2.4, 0, 3.6, -3.6].flatMap(x => [0.9, 0.87, 0.93].map(f => ({ x, d: L * f })));
     const xs = [0, 1.6, -1.6, 3.0, -3.0, 4.2, -4.2];
     const out = [];
@@ -1180,16 +1180,16 @@
       if (lay.chasm) reasons.push('key room must not contain chasm');
     }
     if (lay.chasm && (lay.closets.length || lay.drawers.length)) reasons.push('bridge room has closet/drawer');
-    if (lay.chasm && (ev.rush || ev.ambush)) reasons.push('rush/ambush scheduled in bridge room');
+    if (lay.chasm && (ev.gale || ev.echo)) reasons.push('gale/echo scheduled in bridge room');
     if (lay.terminal) {
       if (!reach({ x: lay.terminal.x, d: lay.terminal.mode === 'keypad' ? lay.frontD - 0.75 : lay.terminal.d }, INTERACT.terminal - 0.35)) reasons.push('terminal unreachable');
-    } else if (lay.puzzleKind !== 'none' && lay.puzzleKind !== 'bridge' && lay.arch !== 'seek') reasons.push('terminal missing');
+    } else if (lay.puzzleKind !== 'none' && lay.puzzleKind !== 'bridge' && lay.arch !== 'ink') reasons.push('terminal missing');
     if (lay.chasm && lay.terminal && lay.terminal.d > lay.chasm.d0) reasons.push('bridge terminal beyond chasm');
     if (lay.terminal && lay.terminal.access && nearCloset(lay, lay.terminal.access.x, lay.terminal.access.d)) reasons.push('terminal too close to a closet (E would open the closet)');
-    if (lay.dupeDoors) {
-      lay.dupeDoors.forEach((dd, i) => { if (!reach({ x: dd.x, d: lay.frontD }, INTERACT.door - 0.4)) reasons.push('dupe door ' + i + ' unreachable'); });
-      if (lay.dupeDoors.filter(x => x.correct).length !== 1) reasons.push('dupe must have exactly one correct door');
-    } else if (!lay.chasm && lay.arch !== 'seek' && !reach({ x: lay.exitX, d: lay.frontD }, INTERACT.door - 0.4)) reasons.push('exit door unreachable before solving');
+    if (lay.decoyDoors) {
+      lay.decoyDoors.forEach((dd, i) => { if (!reach({ x: dd.x, d: lay.frontD }, INTERACT.door - 0.4)) reasons.push('decoy door ' + i + ' unreachable'); });
+      if (lay.decoyDoors.filter(x => x.correct).length !== 1) reasons.push('decoy must have exactly one correct door');
+    } else if (!lay.chasm && lay.arch !== 'ink' && !reach({ x: lay.exitX, d: lay.frontD }, INTERACT.door - 0.4)) reasons.push('exit door unreachable before solving');
     // overlaps among furniture & obstacles
     const fps = footprints(lay).filter(f => !['beam', 'lowWall', 'chasm', 'chasmSide', 'monolithMoved', 'creak', 'gateDoor', 'gateDoorWrong', 'gateWall', 'wall', 'partition', 'niche', 'nicheBack'].includes(f.tag));
     for (let i = 0; i < fps.length; i++) for (let j = i + 1; j < fps.length; j++) {
@@ -1210,28 +1210,28 @@
     if (exitCell < 0 || d1[exitCell] < 0) reasons.push('no path entrance→exit after solving');
     else metrics.pathToExit = d1[exitCell];
     // comfortable width for chase / patrol rooms
-    if (lay.arch === 'seek') {
+    if (lay.arch === 'ink') {
       const gw = makeGrid(lay, S1, PLAYER_R + 0.18, 0.3);
       const sw = nearestFree(gw, 0, 0.9, 0.8), ew = nearestFree(gw, 0, lay.L + 0.2, 0.6);
       const dw = bfs(gw, sw);
-      if (ew < 0 || dw[ew] < 0) reasons.push('seek corridor too narrow');
+      if (ew < 0 || dw[ew] < 0) reasons.push('ink corridor too narrow');
       // crouch beams must actually be necessary only at beams: standing path blocked by beams is fine
       const gc = makeGrid(lay, Object.assign({}, S1, { gateOpen: false }), PLAYER_R, 0.3);
       const dc = bfs(gc, nearestFree(gc, 0, 0.9, 0.6));
       const ec = nearestFree(gc, 0, lay.L + 0.2, 0.6);
-      if (ec >= 0 && dc[ec] >= 0) reasons.push('seek gate not blocking');
+      if (ec >= 0 && dc[ec] >= 0) reasons.push('ink gate not blocking');
     }
-    if (lay.figure) {
+    if (lay.warden) {
       const gf = makeGrid(lay, S1, 0.55, 0.5);
-      const pts = [lay.figure.start].concat(lay.figure.waypoints);
+      const pts = [lay.warden.start].concat(lay.warden.waypoints);
       const dist = bfs(gf, nearestFree(gf, pts[0].x, pts[0].d, 0.8));
-      pts.forEach((p, i) => { const c = nearestFree(gf, p.x, p.d, 0.8); if (c < 0 || dist[c] < 0) reasons.push('figure waypoint ' + i + ' unreachable'); });
+      pts.forEach((p, i) => { const c = nearestFree(gf, p.x, p.d, 0.8); if (c < 0 || dist[c] < 0) reasons.push('warden waypoint ' + i + ' unreachable'); });
       const pc = nearestFree(gf, 0, 1.2, 1.0);
-      if (pc < 0 || dist[pc] < 0) reasons.push('figure cannot reach entrance area');
+      if (pc < 0 || dist[pc] < 0) reasons.push('warden cannot reach entrance area');
     }
-    // Rush fairness: from anywhere reachable, a closet must be close by path
-    if (ev.rush || ev.ambush) {
-      if (!lay.closets.length) reasons.push('rush room without closet');
+    // Gale fairness: from anywhere reachable, a closet must be close by path
+    if (ev.gale || ev.echo) {
+      if (!lay.closets.length) reasons.push('gale room without closet');
       else {
         const cells = lay.closets.map(c => nearestFree(g0, c.access.x, c.access.d, 0.8));
         const dc = multiBfs(g0, cells);
@@ -1240,8 +1240,8 @@
           if (dc[k] < 0) { worst = 999; break; }
           if (dc[k] > worst) worst = dc[k];
         }
-        metrics.rushWorst = worst;
-        if (worst > 17.5) reasons.push('closet too far for rush (' + worst.toFixed(1) + 'm)');
+        metrics.galeWorst = worst;
+        if (worst > 17.5) reasons.push('closet too far for gale (' + worst.toFixed(1) + 'm)');
       }
     }
     // secret room must be reachable
@@ -1307,5 +1307,5 @@
     pointBlocked, resolvePoint, moveCircle, makeGrid, bfs, findPath, nearestFree, rectActive, footprints, SaveManager
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  root.MathDoorsCore = api;
+  root.NextRoomCore = api;
 })(typeof window !== 'undefined' ? window : globalThis);

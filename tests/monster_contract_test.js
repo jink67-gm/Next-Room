@@ -12,14 +12,14 @@ class Geometry{constructor(...args){this.args=args}}
 class Curve{constructor(points){this.points=points}}
 class Material{constructor(opts){Object.assign(this,opts)}}
 const T={Group,Mesh,PointLight:Light,Vector3:Vec,CatmullRomCurve3:Curve,MeshBasicMaterial:Material,MeshStandardMaterial:Material,DoubleSide:2};
-for(let x of 'SphereGeometry ConeGeometry CylinderGeometry TorusGeometry TubeGeometry'.split(' '))T[x]=Geometry;
+for(let x of 'SphereGeometry ConeGeometry CylinderGeometry TorusGeometry TubeGeometry BoxGeometry'.split(' '))T[x]=Geometry;
 const context={window:{THREE:T},Math,console};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../assets/js/monster-models-v2.js'),'utf8'),context);
-const maker=context.window.MathDoorsMonsters;
-const required={rush:['ring1','ring2'],screech:['tentacles'],dupe:['blades'],ambush:['outerCage'],seek:['leftArm','rightArm','leftLeg','rightLeg'],figure:['headGroup','leftArm','rightArm','leftLeg','rightLeg'],jack:['tendrils','jackLight'],hide:['body']};
+const maker=context.window.NextRoomMonsters;
+const required={gale:['ring1','ring2'],whisper:['tentacles'],decoy:['blades'],echo:['outerCage'],ink:['leftArm','rightArm','leftLeg','rightLeg'],warden:['headGroup','leftArm','rightArm','leftLeg','rightLeg'],spook:['tendrils','spookLight']};
 for(const [name,fields] of Object.entries(required)){
  const m=maker.create(name);for(const f of fields)if(!m.userData[f])throw new Error(name+' missing '+f);
- if(name==='figure'&&m.visible===false)throw new Error('Figure should be shown with room');
- if(name!=='figure'&&m.visible!==false)throw new Error(name+' should start hidden');
+ if(name==='warden'&&m.visible===false)throw new Error('Warden should be shown with room');
+ if(name!=='warden'&&m.visible!==false)throw new Error(name+' should start hidden');
  m.visible=true;
  const count=(o)=>1+o.children.reduce((acc,c)=>acc+count(c),0);
  const before=count(m);
@@ -27,4 +27,4 @@ for(const [name,fields] of Object.entries(required)){
  if(!Number.isFinite(m.userData.animPhase))throw new Error(name+' invalid animation');
  console.log(name.padEnd(8), 'contract OK;', before,'scene nodes');
 }
-console.log('8 monster model contract tests passed');
+console.log('7 monster model contract tests passed');

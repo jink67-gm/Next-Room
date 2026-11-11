@@ -11,7 +11,7 @@ async def main():
     import os; os.makedirs(OUT, exist_ok=True)
     p, b, ctx, pg = await launch(viewport=(960, 600), dtcap=0.1)
     g = Game(pg)
-    plan = await g.ev(f"() => {{ MathDoorsCore.setSeason({SEASON}); return MathDoorsCore.planStage(30, 3131).rooms.slice(1).map(r => r.arch); }}")
+    plan = await g.ev(f"() => {{ NextRoomCore.setSeason({SEASON}); return NextRoomCore.planStage(30, 3131).rooms.slice(1).map(r => r.arch); }}")
     seen = {}
     for i, a in enumerate(plan):
         if a not in seen and (not ONLY or a in ONLY): seen[a] = i + 1
@@ -24,7 +24,7 @@ async def main():
         await g.ev("() => { player.z -= 1.0; player.yaw = player.targetYaw = 0; player.pitch = player.targetPitch = -0.08; }")
         await pg.wait_for_timeout(900)
         await pg.screenshot(path=f'{OUT}/s{SEASON}_{door:02d}_{arch}_front.png')
-        await g.ev("() => { const r = MathDoorsDebug.room(); const t = MathDoorsCore.resolvePoint(r.layout, 0, r.roomLen*0.55, 0.42, roomCollisionState(r)); player.x = r.centerX + t.x; player.z = r.zStart - t.d; player.yaw = player.targetYaw = Math.PI; }")
+        await g.ev("() => { const r = NextRoomDebug.room(); const t = NextRoomCore.resolvePoint(r.layout, 0, r.roomLen*0.55, 0.42, roomCollisionState(r)); player.x = r.centerX + t.x; player.z = r.zStart - t.d; player.yaw = player.targetYaw = Math.PI; }")
         await pg.wait_for_timeout(900)
         await pg.screenshot(path=f'{OUT}/s{SEASON}_{door:02d}_{arch}_back.png')
     print('errors', g.errors[:5], flush=True)

@@ -10,7 +10,7 @@ async def main():
     await pg.wait_for_timeout(500)
     await g.ev("() => { player.z -= 3.5; player.yaw = player.targetYaw = 0.0; player.pitch = player.targetPitch = -0.25; }")
     await pg.wait_for_timeout(600); await pg.screenshot(path='/home/claude/bridge_before.png')
-    prob = await g.ev('MathDoorsDebug.problem()'); print(prob['type'], prob.get('bridgeSplit'), prob['q'])
+    prob = await g.ev('NextRoomDebug.problem()'); print(prob['type'], prob.get('bridgeSplit'), prob['q'])
     await g.ev('openPuzzleModal()'); await pg.wait_for_timeout(400)
     await pg.screenshot(path='/home/claude/bridge_modal.png')
     await g.solve_open_puzzle(True)

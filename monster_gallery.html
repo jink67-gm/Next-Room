@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MATH DOORS | 괴물 3D 모델 확인실 · 디테일 강화</title>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NEXT ROOM | 괴물 3D 모델 확인실 · 디테일 강화</title>
 <style>
 :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0c0b13;color:#eeeaf5;font:15px system-ui,'Malgun Gothic',sans-serif;overflow-x:hidden}
 header{padding:18px 23px;border-bottom:1px solid #45334c;background:#191421}h1{font-size:23px;margin:0 0 7px}p{color:#b9afc4;margin:5px 0;line-height:1.5}main{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:12px;padding:13px;min-height:calc(100vh - 100px)}
@@ -8,11 +8,11 @@ header{padding:18px 23px;border-bottom:1px solid #45334c;background:#191421}h1{f
 @media(max-width:700px){main{display:flex;flex-direction:column}#preview{height:57vh;min-height:330px}#menu{grid-template-columns:repeat(4,1fr)}button{min-height:55px;font-size:12px}button small{font-size:10px}#help{grid-column:1/-1}}
 </style></head><body>
 <header><h1>괴물 3D 모델 확인실 · 디테일 강화</h1><p>실제 게임과 같은 Three.js 모델입니다. 마우스/손가락으로 회전하고, 휠로 확대하세요. 오른쪽에서 괴물을 선택할 수 있습니다.</p></header>
-<main><div id="preview"><div id="current"><strong id="monsterName">러쉬</strong><small id="monsterInfo">빠른 복도 돌진 / 귀환 공격</small></div></div><div id="menu">
-<button data-type="rush" class="selected">러쉬<small>Rush</small></button><button data-type="screech">스크리치<small>Screech</small></button>
-<button data-type="dupe">듀프<small>Dupe</small></button><button data-type="ambush">앰부쉬<small>Ambush</small></button>
-<button data-type="seek">시크<small>Seek</small></button><button data-type="figure">피규어<small>Figure</small></button>
-<button data-type="jack">잭<small>Jack</small></button><button data-type="hide">하이드<small>Hide</small></button>
+<main><div id="preview"><div id="current"><strong id="monsterName">돌풍</strong><small id="monsterInfo">빠른 복도 돌진 / 귀환 공격</small></div></div><div id="menu">
+<button data-type="gale" class="selected">돌풍<small>Gale</small></button><button data-type="whisper">속삭이<small>Whisper</small></button>
+<button data-type="decoy">오답이<small>Decoy</small></button><button data-type="echo">메아리<small>Echo</small></button>
+<button data-type="ink">먹물<small>Ink</small></button><button data-type="warden">사서<small>Warden</small></button>
+<button data-type="spook">깜짝이<small>Spook</small></button>
 <div id="help">왼쪽 게임은 기존 괴물의 행동을 유지하면서 얼굴·몸체·표면 디테일을 보강했습니다. 이 확인실에서는 별도의 안전한 공간에서 3D 모델의 형태를 살펴볼 수 있습니다.</div></div></main>
 <script src="assets/vendor/three.min.js"></script><script>if(!window.THREE){document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');}</script>
 <script src="assets/js/monster-models-v2.js"></script><script>
@@ -23,10 +23,10 @@ header{padding:18px 23px;border-bottom:1px solid #45334c;background:#191421}h1{f
  s.add(new THREE.AmbientLight(0xddd1f0,.68));const key=new THREE.PointLight(0xffb989,2.0,14);key.position.set(3,5,5);s.add(key);const rim=new THREE.PointLight(0x8a4aff,1.2,12);rim.position.set(-3,2,-3);s.add(rim);
  const floor=new THREE.Mesh(new THREE.CylinderGeometry(2.05,2.25,.22,48),new THREE.MeshStandardMaterial({color:0x332331,metalness:.45,roughness:.38}));floor.position.y=-.35;s.add(floor);
  const rimRing=new THREE.Mesh(new THREE.TorusGeometry(2.01,.04,10,48),new THREE.MeshBasicMaterial({color:0xa56865}));rimRing.rotation.x=Math.PI/2;rimRing.position.y=-.23;s.add(rimRing);
- const info={rush:['러쉬','검은 연기, 붉은 눈과 이빨'],screech:['스크리치','떠 있는 얼굴과 여러 촉수'],dupe:['듀프','문 뒤에서 기습하는 가짜 얼굴'],ambush:['앰부쉬','연녹색 망령과 뒤틀린 눈'],seek:['시크','유동적인 몸체와 단일 눈'],figure:['피규어','소리에 반응하는 눈 없는 추적자'],jack:['잭','골면 가면과 그림자 촉수'],hide:['하이드','옷장 안의 붉은 눈과 그림자']};
- let cur=null,kind='rush',drag=false,last=0,spin=0,turn=.20,zoom=8,time=performance.now();
- function select(k){if(cur)s.remove(cur);kind=k;cur=MathDoorsMonsters.create(k);cur.visible=true;s.add(cur);cur.rotation.y=-.22;
- const tall=['seek','figure','jack','hide'].includes(k);cur.position.y=tall?0:1.15;
+ const info={gale:['돌풍','검은 연기, 붉은 눈과 이빨'],whisper:['속삭이','떠 있는 얼굴과 여러 촉수'],decoy:['오답이','문 뒤에서 기습하는 가짜 얼굴'],echo:['메아리','연녹색 망령과 뒤틀린 눈'],ink:['먹물','바닥을 타고 번지는 여러 다리의 먹물, 작은 눈들'],warden:['사서','두건과 안경, 등불 지팡이를 든 순찰자'],spook:['깜짝이','골면 가면과 그림자 촉수']};
+ let cur=null,kind='gale',drag=false,last=0,spin=0,turn=.20,zoom=8,time=performance.now();
+ function select(k){if(cur)s.remove(cur);kind=k;cur=NextRoomMonsters.create(k);cur.visible=true;s.add(cur);cur.rotation.y=-.22;
+ const tall=['ink','warden','spook'].includes(k);cur.position.y=tall?0:1.15;
  camera.position.set(0,tall?1.65:1.20,zoom);camera.lookAt(0,tall?1.55:1.05,0);
  document.getElementById('monsterName').textContent=info[k][0];document.getElementById('monsterInfo').textContent=info[k][1];
  document.querySelectorAll('button[data-type]').forEach(b=>b.classList.toggle('selected',b.dataset.type===k));}
@@ -38,8 +38,8 @@ header{padding:18px 23px;border-bottom:1px solid #45334c;background:#191421}h1{f
  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.min(12,Math.max(4,zoom+Math.sign(e.deltaY)*.6))},{passive:false});
  function render(now){requestAnimationFrame(render);const dt=Math.min(.07,(now-time)/1000);time=now;
  const w=host.clientWidth,h=host.clientHeight; if(canvas.width!==Math.floor(w*renderer.getPixelRatio())||canvas.height!==Math.floor(h*renderer.getPixelRatio())){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
- if(cur){cur.rotation.y+=(turn-cur.rotation.y)*Math.min(1,dt*12);MathDoorsMonsters.animate(cur,kind,dt,now*.001);if(['seek','figure'].includes(kind)){const swing=Math.sin(now*.007)*.37;const u=cur.userData;u.leftArm.rotation.x=swing;u.rightArm.rotation.x=-swing;u.leftLeg.rotation.x=-swing;u.rightLeg.rotation.x=swing;} }
- const tall=['seek','figure','jack','hide'].includes(kind);camera.position.z+=(zoom-camera.position.z)*Math.min(1,dt*10);camera.lookAt(0,tall?1.52:1.05,0);renderer.render(s,camera);}
- select('rush');requestAnimationFrame(render);
+ if(cur){cur.rotation.y+=(turn-cur.rotation.y)*Math.min(1,dt*12);NextRoomMonsters.animate(cur,kind,dt,now*.001);if(['ink','warden'].includes(kind)){const swing=Math.sin(now*.007)*.37;const u=cur.userData;u.leftArm.rotation.x=swing;u.rightArm.rotation.x=-swing;u.leftLeg.rotation.x=-swing;u.rightLeg.rotation.x=swing;} }
+ const tall=['ink','warden','spook'].includes(kind);camera.position.z+=(zoom-camera.position.z)*Math.min(1,dt*10);camera.lookAt(0,tall?1.52:1.05,0);renderer.render(s,camera);}
+ select('gale');requestAnimationFrame(render);
 })();
 </script></body></html>

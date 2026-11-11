@@ -1,4 +1,4 @@
-/* MATH DOORS V5 — 오디오 관리자 (BGM 9곡 · 효과음 · 표면별 발소리)
+/* NEXT ROOM V5 — 오디오 관리자 (BGM 9곡 · 효과음 · 표면별 발소리)
  * - Web Audio API: 디코딩한 버퍼를 이음새 없이 루프하고(앞뒤 디코더 무음 자동 제거), 장면이 바뀌면 1.2초 크로스페이드.
  * - BGM / 효과음 볼륨은 서로 독립된 버스(GainNode). 발소리는 효과음 버스 안의 '발소리 버스'(저역 필터)로 더 낮고 부드럽게.
  * - 첫 클릭/터치/키 입력 전에는 아무것도 재생하지 않음 → 브라우저 자동재생 차단 오류 없음.
@@ -13,31 +13,31 @@
     explore: '02_hotel_exploration',
     puzzle: '03_math_puzzle',
     darkRoom: '04_blackout_darkroom',
-    rush: '05_rush_ambush_tension',
-    ambush: '05_rush_ambush_tension',
-    closet: '05_rush_ambush_tension',
-    seek: '06_seek_chase',
-    figure: '07_figure_library',
-    dupe: '08_dupe_secretrooms',
+    gale: '05_gale_echo_tension',
+    echo: '05_gale_echo_tension',
+    closet: '05_gale_echo_tension',
+    ink: '06_ink_chase',
+    warden: '07_warden_library',
+    decoy: '08_decoy_secretrooms',
     safe: '09_safe_recovery'
   };
   // 발소리(step/crouchStep)는 여기서 빼고 playFootstep()으로만 재생 → 예전 발소리와 겹치지 않음
   const EFFECTS = {
     key: 'keypad_press', itemPickup: 'item_pickup', drawerOpen: 'drawer_pull_open', drawerClose: 'drawer_push_close',
     unlock: 'door_unlock_magic', mechanism: 'puzzle_device_activate', closetOpen: 'closet_wood_open', closetClose: 'closet_wood_close',
-    closetRattle: 'hide_closet_knocks', closetCreakSlow: 'closet_slow_handle', closetEnter: 'closet_enter_muffle',
+    closetRattle: 'closet_knocks', closetCreakSlow: 'closet_slow_handle', closetEnter: 'closet_enter_muffle',
     doorSlam: 'door_heavy_slam', doorOpen: 'door_wood_creak_open', doorLock: 'door_lock_click', flicker: 'light_flicker',
-    rushDistant: 'rush_light_warning', rushApproach: 'rush_fast_approach', rushPass: 'rush_corridor_pass', rushReturn: 'rush_return_growl', rushAttack: 'rush_attack_shriek',
-    ambushWarn: 'ambush_glitch_warning', ambushPass: 'ambush_bypass', ambushReturn: 'ambush_turn_back',
-    psst: 'screech_corner_whisper', screechGiggle: 'screech_airy_giggle', screechWince: 'screech_spotted_hiss', screechBanish: 'screech_light_repel', screechAttack: 'screech_attack_scream',
-    figureStep: 'figure_step', figureGrowl: 'figure_breath_growl', figureAlert: 'figure_alert_roar', figureSniff: 'figure_sniff',
-    jackStartle: 'jack_jumpscare_sting', jackLaugh: 'jack_creepy_laugh',
-    hideKnock: 'hide_closet_knocks', hideEject: 'hide_force_eject', hideBreath: 'hide_angry_breath',
+    galeDistant: 'gale_light_warning', galeApproach: 'gale_fast_approach', galePass: 'gale_corridor_pass', galeReturn: 'gale_return_growl', galeAttack: 'gale_attack_shriek',
+    echoWarn: 'echo_glitch_warning', echoPass: 'echo_bypass', echoReturn: 'echo_turn_back',
+    psst: 'whisper_corner_whisper', whisperGiggle: 'whisper_airy_giggle', whisperWince: 'whisper_spotted_hiss', whisperBanish: 'whisper_light_repel', whisperAttack: 'whisper_attack_scream',
+    wardenStep: 'warden_step', wardenGrowl: 'warden_breath_growl', wardenAlert: 'warden_alert_roar', wardenSniff: 'warden_sniff',
+    spookStartle: 'spook_jumpscare_sting', spookLaugh: 'spook_creepy_laugh',
+    closetKnock: 'closet_knocks', closetEject: 'closet_force_exit', closetBreath: 'closet_stale_breath',
     hitImpact: 'player_hit_dizzy', playerRecover: 'player_breath_recover', breath: 'player_breath_recover',
     win: 'puzzle_correct', puzzleCorrect: 'puzzle_correct', puzzleWrong: 'puzzle_wrong',
     batteryWarning: 'battery_warning', flashlightOn: 'flashlight_on', flashlightOff: 'flashlight_off', keyPickup: 'key_pickup',
-    dupeDistortion: 'dupe_door_distortion', dupeAttack: 'dupe_lunge_attack',
-    seekRoar: 'seek_chase_roar', seekEmerge: 'seek_emerge', seekSteps: 'seek_steps_heavy',
+    decoyDistortion: 'decoy_door_distortion', decoyAttack: 'decoy_lunge_attack',
+    inkRoar: 'ink_chase_roar', inkEmerge: 'ink_emerge', inkSteps: 'ink_steps_heavy',
     bridge: 'bridge_deploy', doorLocked: 'door_rattle_locked',
     heartbeat: 'ambient_heartbeat', pipeKnock: 'ambient_pipe_knock', hotelWhisper: 'ambient_hotel_whisper'
   };
@@ -51,7 +51,7 @@
   const footstepFile = (s, m, i) => `footstep_${s}_${m}_${String(i).padStart(2, '0')}`;
 
   const BASE = 'assets/audio/';
-  const limits = { key: 55, figureStep: 220, hideKnock: 900, psst: 1500, rushDistant: 1300, ambushWarn: 1300, heartbeat: 300, doorLocked: 600, figureAlert: 900 };
+  const limits = { key: 55, wardenStep: 220, closetKnock: 900, psst: 1500, galeDistant: 1300, echoWarn: 1300, heartbeat: 300, doorLocked: 600, wardenAlert: 900 };
   const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, Number(v) || 0));
   const FADE = 1.2;
 
@@ -175,7 +175,7 @@
     _preload() {
       if (!this.ctx) return;
       // 자주 쓰는 소리를 미리 디코딩 (괴물 경고·발소리는 처음 재생 때 늦지 않게)
-      ['puzzle_correct', 'puzzle_wrong', 'keypad_press', 'rush_light_warning', 'ambush_glitch_warning', 'closet_wood_open', 'closet_wood_close', 'player_hit_dizzy'].forEach(n => this._load('sfx/' + n));
+      ['puzzle_correct', 'puzzle_wrong', 'keypad_press', 'gale_light_warning', 'echo_glitch_warning', 'closet_wood_open', 'closet_wood_close', 'player_hit_dizzy'].forEach(n => this._load('sfx/' + n));
       SURFACES.forEach(s => Object.keys(STEP_COUNT).forEach(m => { for (let i = 1; i <= STEP_COUNT[m]; i++) this._load('sfx/' + footstepFile(s, m, i)); }));
     }
 
@@ -323,9 +323,9 @@
     return { start: s / sr, end: (e + 1) / sr };
   }
 
-  window.MathDoorsAudio = new SoundManager();
-  window.MathDoorsAudio.init();
-  window.MathDoorsAudio.TRACKS = TRACKS;
-  window.MathDoorsAudio.EFFECTS = EFFECTS;
-  window.MathDoorsAudio.FOOTSTEPS = { SURFACES, STEP_COUNT, file: footstepFile };
+  window.NextRoomAudio = new SoundManager();
+  window.NextRoomAudio.init();
+  window.NextRoomAudio.TRACKS = TRACKS;
+  window.NextRoomAudio.EFFECTS = EFFECTS;
+  window.NextRoomAudio.FOOTSTEPS = { SURFACES, STEP_COUNT, file: footstepFile };
 })();

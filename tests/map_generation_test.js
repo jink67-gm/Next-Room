@@ -1,27 +1,27 @@
-/* MATH DOORS V5 — 무작위 맵 대량 생성 검사 (Node.js)
+/* NEXT ROOM V5 — 무작위 맵 대량 생성 검사 (Node.js)
  * 실행: node tests/map_generation_test.js [맵수=120]
  * 10·20·30문 모드 각각 N개의 시드로 전체 스테이지를 만들고, 모든 방을 배치도 수준에서 검사한다.
  * - 입구→출구 경로(장치 해결 후), 장치 해결 전 단말기·서랍·옷장·열쇠 접근 가능 여부
  * - 가구·구조물 겹침, 벽 속 가구, 절벽 위 물체, 공중에 뜬 책장/상자
- * - 다리 방: 옷장·서랍 없음 / 러쉬·앰부쉬 없음 / 단말기는 절벽 앞
+ * - 다리 방: 옷장·서랍 없음 / 돌풍·메아리 없음 / 단말기는 절벽 앞
  * - 열쇠 방: 열쇠는 잠긴 문·절벽 뒤가 아닌 곳, 다리와 같은 방 금지
- * - 러쉬·앰부쉬 방: 어디서든 옷장까지 걸어서 17.5 m 이내
- * - 시크 복도: 넉넉한 폭(반지름+0.18 m)으로도 통과 가능, 오답 문은 실제로 막혀 있음
- * - 피규어 도서관: 순찰 지점 모두 연결, 피규어 반지름 0.5 m로 이동 가능
+ * - 돌풍·메아리 방: 어디서든 옷장까지 걸어서 17.5 m 이내
+ * - 먹물 복도: 넉넉한 폭(반지름+0.18 m)으로도 통과 가능, 오답 문은 실제로 막혀 있음
+ * - 사서 도서관: 순찰 지점 모두 연결, 사서 반지름 0.5 m로 이동 가능
  * - 스테이지 계획: 특수 이벤트 중복/연속, 같은 방번호 덮어쓰기 없음
  * - 충돌 함수: 강한 넉백(초속 25 m)으로도 벽·절벽을 통과하지 못함
  */
 'use strict';
 const path = require('path');
 const C = require(path.join(__dirname, '..', 'assets', 'js', 'v5-core.js'));
-global.MathDoorsCore = C;
+global.NextRoomCore = C;
 const B = require(path.join(__dirname, '..', 'assets', 'js', 'math-bank-v5.js'));
 
 const N = parseInt(process.argv[2] || '120', 10);
 const UNIT_SETS = [[1, 2, 3, 4, 5, 6], [1], [2], [3], [4], [5], [6], [3, 6], [1, 4]];
 let failures = 0, rooms = 0, fallbacks = 0, regenerated = 0;
 const fail = (m) => { failures++; if (failures <= 40) console.log('FAIL', m); };
-const HEAVY = ['library', 'seek'], SPECIAL = ['dupe', 'bridge', 'keySearch', 'library', 'seek'];
+const HEAVY = ['library', 'ink'], SPECIAL = ['decoy', 'bridge', 'keySearch', 'library', 'ink'];
 
 function checkPlan(plan, Nd) {
   const archs = plan.rooms.slice(1).map(r => r.arch);
@@ -29,8 +29,8 @@ function checkPlan(plan, Nd) {
   if (archs[0] !== 'guest') fail('door 1 must be guest');
   if (archs[Nd - 1] !== 'library') fail('final door must be library');
   const cfg = plan.config;
-  ['dupe', 'bridge', 'keySearch'].forEach(k => { const c = archs.filter(a => a === k).length; if (c !== cfg.counts[k]) fail(`plan ${Nd}: ${k} count ${c} != ${cfg.counts[k]}`); });
-  if (archs.filter(a => a === 'seek').length !== cfg.seeks.length) fail('seek count');
+  ['decoy', 'bridge', 'keySearch'].forEach(k => { const c = archs.filter(a => a === k).length; if (c !== cfg.counts[k]) fail(`plan ${Nd}: ${k} count ${c} != ${cfg.counts[k]}`); });
+  if (archs.filter(a => a === 'ink').length !== cfg.inks.length) fail('ink count');
   for (let i = 1; i < Nd; i++) {
     if (HEAVY.includes(archs[i]) && HEAVY.includes(archs[i - 1])) fail(`plan ${Nd} seed ${plan.seed}: heavy events adjacent at ${i + 1}`);
     if (archs[i] === archs[i - 1]) fail(`plan ${Nd} seed ${plan.seed}: same room type twice in a row at ${i + 1} (${archs[i]})`);
@@ -42,9 +42,9 @@ function checkPlan(plan, Nd) {
     if (run > cfg.maxRun) fail(`plan ${Nd} seed ${plan.seed}: ${run} special events in a row at ${i + 1}`);
   }
   plan.rooms.slice(1).forEach((r, i) => {
-    if ((r.events.rush || r.events.ambush) && ['bridge', 'seek', 'library', 'dupe'].includes(r.arch)) fail('rush/ambush in ' + r.arch);
-    if (r.events.rush && r.events.ambush) fail('rush and ambush in same room');
-    if (i > 0) { const pr = plan.rooms[i]; if ((pr.events.rush || pr.events.ambush) && (r.events.rush || r.events.ambush)) fail(`consecutive rush/ambush rooms at ${i + 1}`); }
+    if ((r.events.gale || r.events.echo) && ['bridge', 'ink', 'library', 'decoy'].includes(r.arch)) fail('gale/echo in ' + r.arch);
+    if (r.events.gale && r.events.echo) fail('gale and echo in same room');
+    if (i > 0) { const pr = plan.rooms[i]; if ((pr.events.gale || pr.events.echo) && (r.events.gale || r.events.echo)) fail(`consecutive gale/echo rooms at ${i + 1}`); }
   });
 }
 
@@ -93,9 +93,9 @@ for (const Nd of [10, 20, 30]) {
       // independent re-validation (validator must be deterministic)
       const again = C.validateLayout(lay, r);
       if (!again.ok) fail('re-validation differs');
-      if (r.arch === 'dupe') {
-        if (!prob || prob.type !== 'typeE_dupe' || prob.dupeChoices.length !== 3) fail('dupe room without 3-choice problem (units ' + units + ')');
-        if (!lay.dupeDoors || lay.dupeDoors.length !== 3) fail('dupe room without 3 doors');
+      if (r.arch === 'decoy') {
+        if (!prob || prob.type !== 'typeE_decoy' || prob.decoyChoices.length !== 3) fail('decoy room without 3-choice problem (units ' + units + ')');
+        if (!lay.decoyDoors || lay.decoyDoors.length !== 3) fail('decoy room without 3 doors');
       }
       if (r.arch === 'bridge') {
         if (!prob || prob.deviceType !== 'bridge') fail('bridge room without bridge problem');
@@ -118,13 +118,13 @@ console.log('season item rooms:', JSON.stringify(seasonCounts));
 
 // Negative tests: the validator must catch deliberately broken rooms
 (function negativeTests() {
-  const plan = { door: 3, arch: 'guest', events: { rush: true } };
+  const plan = { door: 3, arch: 'guest', events: { gale: true } };
   const lay = C.buildLayout(3, 'guest', 5, { kind: 'any' }, 0, false, plan.events);
   const blocked = JSON.parse(JSON.stringify(lay));
   blocked.rects.push({ x: 0, d: blocked.L * 0.5, hw: blocked.W / 2, hd: 0.3, y0: 0, y1: 5.4, kind: 'wall' });
   if (C.validateLayout(blocked, plan).ok) fail('validator missed a wall cutting the room in half');
   const noCloset = JSON.parse(JSON.stringify(lay)); noCloset.closets = [];
-  if (C.validateLayout(noCloset, plan).ok) fail('validator missed rush room without closet');
+  if (C.validateLayout(noCloset, plan).ok) fail('validator missed gale room without closet');
   const overlap = JSON.parse(JSON.stringify(lay));
   if (overlap.drawers[0]) { overlap.drawers.push(JSON.parse(JSON.stringify(overlap.drawers[0]))); if (C.validateLayout(overlap, plan).ok) fail('validator missed overlapping drawers'); }
   const key = C.buildLayout(4, 'keySearch', 6, { kind: 'door' }, 0, false, {});

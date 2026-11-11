@@ -1,9 +1,9 @@
-"""MATH DOORS V6.2 — 선생님 피드백 검증
+"""NEXT ROOM V6.2 — 선생님 피드백 검증
 1) 분수는 항상 세로 분수: 모든 단원·유형의 문제 화면에 '3/4' 같은 빗금 분수 글자가 남지 않음
 2) 회복약 단축키 H
 3) 문제 글씨가 커졌는지 (문제 지문 ≥ 20px)
-4) 러쉬가 지나갈 때 걸쇠 문제 없음 → triggerRushEvent 후 숨어 있으면 문제 창이 뜨지 않고 피해 없음
-5) 피규어 심장박동 창: 남은 시간이 실제로 줄고, 시간이 다 되면 오답 처리 + 새 문제
+4) 돌풍이 지나갈 때 걸쇠 문제 없음 → triggerGaleEvent 후 숨어 있으면 문제 창이 뜨지 않고 피해 없음
+5) 사서 책 꽂기 창: 남은 시간이 실제로 줄고, 시간이 다 되면 오답 처리 + 새 문제
 6) 움직일 때 깜빡임(z-fighting): 같은 평면에 겹친 벽면이 거의 없어야 함
 실행: python3 tests/e2e/v62_test.py
 """
@@ -16,7 +16,7 @@ def record(name, ok, detail=''):
     RESULTS.append((name, ok, detail)); print(('PASS ' if ok else 'FAIL ') + name + (' — ' + detail if detail else ''), flush=True)
 
 FRAC_SCAN = r"""() => {
-  const B = MathDoorsBank, C = MathDoorsCore, found = []; let n = 0;
+  const B = NextRoomBank, C = NextRoomCore, found = []; let n = 0;
   const r = activeRooms[currentDoor]; r.requiresKey = false; r.keyUnlocked = true;
   const visText = (root) => { const out = []; const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let t;
     while ((t = w.nextNode())) { const el = t.parentElement; if (!el || el.closest('.hidden') || getComputedStyle(el).display === 'none') continue; if (/\d\s*\/\s*\d/.test(t.textContent)) out.push(t.textContent.trim().slice(0, 50)); } return out; };
@@ -25,14 +25,14 @@ FRAC_SCAN = r"""() => {
     if (!p) continue; n++;
     r.problem = p; r.puzzleSolved = false; uiOpen.puzzle = false;
     openPuzzleModal();
-    if (p.type === 'typeB_blank' || p.type === 'typeF_device' || p.type === 'typeE_dupe') { pressKey('3'); pressKey('/'); }   // 입력 중인 분수도 확인
+    if (p.type === 'typeB_blank' || p.type === 'typeF_device' || p.type === 'typeE_decoy') { pressKey('3'); pressKey('/'); }   // 입력 중인 분수도 확인
     const t = visText(document.getElementById('puzzle-modal'));
     document.getElementById('modal-hint-box').classList.remove('hidden');
     visText(document.getElementById('modal-hint-box')).forEach(x => t.push('hint:' + x));
     if (t.length) found.push([unit, code, t.slice(0, 3)]);
     closePuzzleModal();
   }
-  // 심장박동 문제 보기
+  // 책 꽂기 문제 보기
   for (let i = 0; i < 40; i++) { const d = deck.drawDefense(); const div = document.createElement('div'); div.innerHTML = formatMathHTML(d.q) + d.choices.map(formatMathHTML).join(' '); document.body.appendChild(div); if (/\d\s*\/\s*\d/.test(div.innerText)) found.push(['defense', d.q]); div.remove(); }
   return { n, found };
 }"""
@@ -48,7 +48,7 @@ async def main():
     door_tex = await g.ev("""() => { const c = document.createElement('canvas'); const t = createDoorTexture('3/4 m'); return !!t; }""")
     record('door labels with fractions draw as stacked fractions (3/4 m, 1과 2/5)', door_tex)
     # 3) 글씨
-    await g.ev("() => { const r = activeRooms[currentDoor]; r.problem = MathDoorsBank.generate(1, 'F', MathDoorsCore.makeRng('fs', 1, 1)); r.puzzleSolved = false; openPuzzleModal(); }")
+    await g.ev("() => { const r = activeRooms[currentDoor]; r.problem = NextRoomBank.generate(1, 'F', NextRoomCore.makeRng('fs', 1, 1)); r.puzzleSolved = false; openPuzzleModal(); }")
     fs = await g.ev("parseFloat(getComputedStyle(document.getElementById('modal-question')).fontSize)")
     record('puzzle question text is bigger (≥ 20px)', fs >= 20, f'{fs}px')
     await g.ev("closePuzzleModal()")
@@ -61,34 +61,34 @@ async def main():
     await g.ev("() => { medkitsCount = 1; updateHUD(); }")
     lbl = await g.ev("document.getElementById('medkit-btn').innerText")
     record('medkit button shows the [H] shortcut', '[H]' in lbl, lbl)
-    # 4) 러쉬: 숨어 있으면 문제 없이 지나감
+    # 4) 돌풍: 숨어 있으면 문제 없이 지나감
     await g.ev("() => { const r = activeRooms[currentDoor]; const c = r.closets[0]; player.x = c.worldX; player.z = c.worldZ; }")
     await pg.wait_for_timeout(500); await g.key('KeyE'); await pg.wait_for_timeout(1500)
     record('(setup) player is hidden in a closet', (await g.state())['closet'] == 'HIDDEN')
     h0 = (await g.state())['hearts']
-    await g.ev("triggerRushEvent()")
+    await g.ev("triggerGaleEvent()")
     em = False; swept = False
     for _ in range(300):
         st = await g.state()
         if st['ui']['emergency']: em = True
-        if st['rush']['phase'] == 'SWEEPING': swept = True
-        if swept and not st['rush']['active'] and not st['rush']['warning']: break
+        if st['gale']['phase'] == 'SWEEPING': swept = True
+        if swept and not st['gale']['active'] and not st['gale']['warning']: break
         await pg.wait_for_timeout(100)
     st = await g.state()
-    record('rush passes a hidden player with NO latch quiz and no damage', swept and not em and st['hearts'] == h0, f"swept={swept} quiz={em} hearts {h0}→{st['hearts']}")
+    record('gale passes a hidden player with NO latch quiz and no damage', swept and not em and st['hearts'] == h0, f"swept={swept} quiz={em} hearts {h0}→{st['hearts']}")
     await g.ev("exitClosetImmediate()"); await pg.wait_for_timeout(500)
-    # 5) 심장박동 시간
-    await g.ev("() => { hb.wrong = 0; openHeartbeat(); }")
+    # 5) 책 꽂기 시간
+    await g.ev("() => { hb.wrong = 0; openShelfQuiz(); }")
     s0 = await g.ev("hb.remain"); await pg.wait_for_timeout(2500); s1 = await g.ev("hb.remain")
     txt = await g.ev("document.getElementById('hb-secs').innerText")
-    record('heartbeat: remaining seconds actually count down', s0 - s1 > 1.8, f'{s0:.1f}s → {s1:.1f}s ({txt})')
+    record('shelf quiz: remaining seconds actually count down', s0 - s1 > 1.8, f'{s0:.1f}s → {s1:.1f}s ({txt})')
     q0 = await g.ev("hb.prob.q")
     await g.ev("() => { clearInterval(hb.countdown); hb.total = 1; }")
-    await g.ev("""() => { const deadline = performance.now() + 600; clearInterval(hb.countdown); hb.countdown = setInterval(() => { if (performance.now() > deadline) { clearInterval(hb.countdown); answerHeartbeat(false, true); } }, 50); }""")
+    await g.ev("""() => { const deadline = performance.now() + 600; clearInterval(hb.countdown); hb.countdown = setInterval(() => { if (performance.now() > deadline) { clearInterval(hb.countdown); answerShelfQuiz(false, true); } }, 50); }""")
     await pg.wait_for_timeout(1500)
     fb = await g.ev("document.getElementById('hb-feedback').innerText"); w = await g.ev("hb.wrong"); q1 = await g.ev("hb.prob.q")
-    record('heartbeat: time-out counts as a wrong answer and gives a new question with a fresh timer', w == 1 and '시간' in fb and await g.ev("hb.remain") > 5, f'wrong={w} fb={fb}')
-    await g.ev("closeHeartbeat(); figureState.hunt = false;")
+    record('shelf quiz: time-out counts as a wrong answer and gives a new question with a fresh timer', w == 1 and '시간' in fb and await g.ev("hb.remain") > 5, f'wrong={w} fb={fb}')
+    await g.ev("closeShelfQuiz(); wardenState.hunt = false;")
     # 6) 깜빡임 검사
     scan = open('/home/claude/v5/tests/e2e/zfight_scan.js').read()
     total = 0; detail = []

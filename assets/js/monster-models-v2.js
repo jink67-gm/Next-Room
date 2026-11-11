@@ -1,4 +1,4 @@
-/* MATH DOORS — custom procedural monster models v2.
+/* NEXT ROOM — custom procedural monster models v2.
  * Original stylized 3D characters, no flat sprites, no external textures.
  * Compatible with Three.js r128, existing game entity APIs and physics.
  */
@@ -61,7 +61,7 @@
   }
   function defaultMeta(g,type,body){g.userData.type=type;g.userData.body=body;g.userData.animPhase=0;g.visible=false;return g;}
 
-  function Rush(){
+  function Gale(){
     const g=new T.Group(), body=new T.Group();g.add(body);
     const shell=orb(body,tar,0,0,0,1.20,1.36,.95);
     for(let i=0;i<9;i++){
@@ -81,10 +81,10 @@
       const rr=part(g,geom.tor(k?1.85:1.5,k?.038:.060,38),new T.MeshBasicMaterial({color:k?0x5b1c3b:0xce2344,transparent:true,opacity:k?.36:.63}),0,0,0);
       rr.rotation.y=k?1.0:.2;rings.push(rr);
     }
-    g.userData={ring1:rings[0],ring2:rings[1],body,mandible,type:'rush',animPhase:0};
+    g.userData={ring1:rings[0],ring2:rings[1],body,mandible,type:'gale',animPhase:0};
     light(g,0xb8193c,1.2,8,0,.15,.3);g.visible=false;return g;
   }
-  function Screech(){
+  function Whisper(){
     const g=new T.Group(),body=new T.Group();g.add(body);
     orb(body,tar,0,0,0,.46,.49,.40);
     for(let i=0;i<7;i++){const a=i*6.283/7;
@@ -99,9 +99,9 @@
       tube(pivot,[[0,0,0],[dx*.19,dy*.19,-.10],[dx*.31,dy*.43,-.27],[dx*.52,dy*.50,-.44]],.045,tar);
       tentacles.push(pivot);
     }
-    g.userData={body,tentacles,type:'screech',animPhase:0};light(g,0x6049d8,.36,3);g.visible=false;return g;
+    g.userData={body,tentacles,type:'whisper',animPhase:0};light(g,0x6049d8,.36,3);g.visible=false;return g;
   }
-  function Dupe(){
+  function Decoy(){
     const g=new T.Group(),body=new T.Group();g.add(body);
     const skull=orb(body,black,0,.17,-.10,.67,.78,.46);
     // Crack-like magenta capillaries.
@@ -120,9 +120,9 @@
       for(let j=0;j<3;j++)spike(b,bone,[s*.44+j*.07,-.29,.68],[s*(.55+j*.10),-.45,.95],.055);
       blades.push(b);
     }
-    g.userData={body,blades,type:'dupe',animPhase:0};g.visible=false;return g;
+    g.userData={body,blades,type:'decoy',animPhase:0};g.visible=false;return g;
   }
-  function Ambush(){
+  function Echo(){
     const g=new T.Group(),body=new T.Group();g.add(body);
     const teal=mat(0x092f2a,0x15877b,.60,.32),pale=mat(0xbed4be,0x55bfb4,.24),mint=glow(0xa7ffe6);
     orb(body,teal,0,0,-.2,.98,1.27,.57);
@@ -139,59 +139,77 @@
     }
     mouth(body,-.40,.58,.37,.36);
     const ring=part(g,geom.tor(1.35,.055,32),new T.MeshBasicMaterial({color:0x67ffe4,transparent:true,opacity:.28}));ring.rotation.y=.2;
-    g.userData={body,outerCage:ring,type:'ambush',animPhase:0};light(g,0x1ccfb2,1.0,8);g.visible=false;return g;
+    g.userData={body,outerCage:ring,type:'echo',animPhase:0};light(g,0x1ccfb2,1.0,8);g.visible=false;return g;
   }
-  function Seek(){
+  function Ink(){
     const g=new T.Group(), body=new T.Group();g.add(body);
-    const m=mat(0x111218,0x13081f,.32,.22,.45);
-    const torso=orb(body,m,0,1.63,0,.52,.73,.30);
-    orb(body,m,0,2.35,0,.39,.44,.34);
-    // A single large reflective iris, no copied monster silhouette.
-    orb(body,glow(0xf5ebdd),0,2.37,.30,.21,.22,.065);
-    orb(body,glow(0x251927),0,2.37,.35,.093,.13,.035);
-    orb(body,ivory,-.05,2.44,.39,.045,.05,.018);
-    for(let i=0;i<6;i++){
-      const a=(i/6)*6.283;
-      tube(body,[[Math.cos(a)*.23,1.1,-.1],[Math.cos(a)*.38,.74,-.25],[Math.cos(a)*.55,.15,-.30]],.066,m);
+    const m=mat(0x0b0c12,0x0f0a1c,.30,.16,.50);
+    // Spreading ink pool on the floor (stays flat while the body bobs).
+    part(g,geom.cyl(1.25,1.5,.05,20),m,0,.03,-.35);
+    // A leaning wave of ink: tall crest in front, low trailing mounds behind.
+    orb(body,m,0,.85,.15,.78,.85,.62);
+    orb(body,m,0,.55,-.55,.92,.55,.75);
+    orb(body,m,0,.32,-1.20,.75,.32,.70);
+    orb(body,m,0,1.45,.38,.46,.50,.40);
+    for(let i=0;i<7;i++){
+      const x=(i-3)*.24, y=1.25-Math.abs(i-3)*.2;
+      spike(body,m,[x,y,.55],[x*1.15,y-.55,.72],.085);
     }
+    // Many small pale eyes of different sizes scattered over the crest.
+    for(const [x,y,z,r] of [[-.28,1.50,.70,.085],[.20,1.62,.68,.06],[.02,1.30,.80,.11],[-.42,1.05,.70,.06],[.40,1.10,.68,.075],[.10,.85,.78,.05]]){
+      orb(body,glow(0xe9f1ff),x,y,z,r,r,r*.4);
+      orb(body,glow(0x10131c),x,y,z+r*.3,r*.45,r*.45,r*.2);
+    }
+    // Skittering legs: two per pivot, bound to the limb nodes the chase AI already swings.
     const limbs={};
-    for(const [key,s,y,h] of [['leftArm',-1,1.65,.86],['rightArm',1,1.65,.86],['leftLeg',-1,.68,1.14],['rightLeg',1,.68,1.14]]){
-      const pivot=new T.Group();pivot.position.set(s*(key.endsWith('Arm')?.47:.22),y,0);body.add(pivot);
-      const l=orb(pivot,m,0,-h*.37,0,key.endsWith('Arm')?.16:.185,h*.53,key.endsWith('Arm')?.15:.21);
-      orb(pivot,m,0,-h*.80,.1,key.endsWith('Arm')?.19:.25,.16,.26);
+    for(const [key,s,z] of [['leftArm',-1,.35],['rightArm',1,.35],['leftLeg',-1,-.45],['rightLeg',1,-.45]]){
+      const pivot=new T.Group();pivot.position.set(s*.6,.75,z);body.add(pivot);
+      tube(pivot,[[0,0,0],[s*.55,.25,.10],[s*.95,-.75,.20]],.07,m);
+      tube(pivot,[[0,-.1,-.3],[s*.50,.10,-.35],[s*.85,-.75,-.45]],.06,m);
       limbs[key]=pivot;
     }
-    g.userData={body,...limbs,type:'seek',animPhase:0};light(g,0x7d1f4b,.65,6,0,1.8,.3);g.visible=false;return g;
+    g.userData={body,...limbs,type:'ink',animPhase:0};light(g,0x4a5cff,.65,6,0,1.2,.3);g.visible=false;return g;
   }
-  function Figure(){
+  function Warden(){
     const g=new T.Group(), body=new T.Group();g.add(body);
-    const flesh=mat(0x652b35,0x28070e,.24,.68),sinew=mat(0x9a4653,0x310b19,.18,.51);
-    const torso=orb(body,flesh,0,1.64,0,.53,.83,.33);
-    for(let j=0;j<6;j++){
-      const y=1.25+j*.17;
-      for(let s of [-1,1]){
-        tube(body,[[s*.08,y,.30],[s*.43,y+.06,.25],[s*.44,y+.02,-.08]],.038,bone);
-      }
+    const robe=mat(0x2a2233,0x0d0814,.20,.85),trim=mat(0x7a6240,0x2a1c08,.15,.60,.30),paper=mat(0xd8cfb8,0x3a3324,.10,.80);
+    part(body,geom.cone(.78,2.1,12),robe,0,1.05,0);
+    orb(body,robe,0,2.05,0,.50,.42,.36);
+    const belt=part(body,geom.tor(.47,.03,20),trim,0,1.45,0);belt.rotation.x=Math.PI/2;
+    const headGroup=new T.Group();headGroup.position.set(0,2.62,0);body.add(headGroup);
+    orb(headGroup,robe,0,.02,-.06,.40,.47,.42);
+    orb(headGroup,glow(0x07050a),0,-.02,.24,.26,.32,.14);
+    // Two round spectacle lenses catch the lantern light inside the dark hood.
+    for(const s of [-1,1]){
+      part(headGroup,geom.tor(.085,.014,16),trim,s*.11,.02,.37);
+      orb(headGroup,glow(0xffd98a),s*.11,.02,.36,.07,.07,.012);
     }
-    tube(body,[[0,.89,-.29],[0,1.28,-.34],[0,1.68,-.32],[0,2.07,-.27]],.10,bone);
-    const headGroup=new T.Group();headGroup.position.set(0,2.73,0);body.add(headGroup);
-    orb(headGroup,flesh,0,0,0,.48,.61,.38);
-    // Figure has no eyes: a segmented gaping vertical sensory mouth.
-    orb(headGroup,glow(0x0b0408),0,-.025,.35,.23,.44,.10);
-    for(let s of [-1,1]) for(let i=0;i<6;i++)spike(headGroup,bone,[s*.18,.21-i*.08,.43],[s*.08,.17-i*.08,.49],.033);
-    for(let i=0;i<7;i++)spike(headGroup,sinew,[(i-3)*.11,.48,.14],[(i-3)*.15,.82,.00],.055);
     const limbs={};
-    for(const [key,s,y,h] of [['leftArm',-1,1.96,1.35],['rightArm',1,1.96,1.35],['leftLeg',-1,.85,1.55],['rightLeg',1,.85,1.55]]){
-      const pivot=new T.Group();pivot.position.set(s*(key.endsWith('Arm')?.49:.25),y,0);body.add(pivot);
-      const isArm=key.endsWith('Arm');
-      orb(pivot,flesh,0,-h*.40,0,isArm?.15:.20,h*.45,.14);
-      orb(pivot,flesh,0,-h*.85,.09,isArm?.19:.25,.18,.23);
-      if(isArm)for(let i=0;i<3;i++)spike(pivot,bone,[(i-1)*.11,-h*.99,.1],[(i-1)*.14,-h*1.22,.23],.040);
+    for(const [key,s] of [['leftArm',-1],['rightArm',1]]){
+      const pivot=new T.Group();pivot.position.set(s*.5,2.1,0);body.add(pivot);
+      orb(pivot,robe,0,-.42,.05,.15,.50,.17);
+      orb(pivot,paper,0,-.92,.10,.09,.10,.09);
       limbs[key]=pivot;
     }
-    g.userData={body,headGroup,...limbs,type:'figure',animPhase:0};light(g,0x932d42,.6,8,0,2,.5);return g;
+    // The robe hides the legs; empty pivots keep the walk-cycle contract.
+    for(const [key,s] of [['leftLeg',-1],['rightLeg',1]]){
+      const pivot=new T.Group();pivot.position.set(s*.2,.3,0);body.add(pivot);limbs[key]=pivot;
+    }
+    // Lantern staff is fixed to the body so the light does not swing with the arms.
+    const staff=new T.Group();staff.position.set(.62,0,.35);body.add(staff);
+    part(staff,geom.cyl(.03,.035,2.9,8),trim,0,1.45,0);
+    tube(staff,[[0,2.9,0],[-.05,3.1,.2],[-.1,2.95,.42]],.025,trim);
+    const lantern=new T.Group();lantern.position.set(-.1,2.9,.42);staff.add(lantern);
+    part(lantern,geom.cyl(.13,.16,.34,8),glow(0xffcf7a),0,-.28,0);
+    part(lantern,geom.cone(.2,.14,8),trim,0,-.04,0);
+    part(lantern,geom.cyl(.17,.17,.04,8),trim,0,-.47,0);
+    // A stack of books tucked under the left arm.
+    for(let i=0;i<3;i++){
+      const bk=part(body,new T.BoxGeometry(.42,.09,.30),i%2?paper:trim,-.50,1.50+i*.10,.30);bk.rotation.y=.2*i;
+    }
+    g.userData={body,headGroup,...limbs,lantern,type:'warden',animPhase:0};light(g,0xffb95e,.8,9,.5,2.6,.8);return g;
   }
-  function Jack(){
+  function Spook(){
     const g=new T.Group(),body=new T.Group();g.add(body);
     const cloak=mat(0x130d1b,0x390f29,.28,.78),mask=mat(0xc8c2b9,0x191116,.14,.68);
     const dress=part(body,geom.cone(.79,1.70,12),cloak,0,.86,0);
@@ -220,16 +238,8 @@
       for(let j=0;j<3;j++)spike(pivot,bone,[s*.25+(j-1)*.06,-.33,.38],[s*.31+(j-1)*.09,-.45,.62],.04);
       claws.push(pivot);
     }
-    const jackLight=light(g,0xba2858,1.1,6,0,2.16,.7);
-    g.userData={body,head,tendrils,claws,jackLight,type:'jack',animPhase:0};g.visible=false;return g;
-  }
-  function Hide(){
-    const g=new T.Group(),body=new T.Group();g.add(body);
-    const fogmat=new T.MeshStandardMaterial({color:0x100a19,transparent:true,opacity:.60,side:T.DoubleSide,roughness:.94,depthWrite:false});
-    orb(body,fogmat,0,0,0,.39,.66,.20);
-    for(let i=0;i<5;i++){let x=(i-2)*.18;spike(body,fogmat,[x,-.14,-.04],[x*1.9,-.98,-.15],.10);}
-    for(let s of [-1,1]){orb(body,black,s*.16,.16,.185,.13,.105,.04);orb(body,glow(0xfb658b),s*.16,.17,.22,.052,.056,.020);}
-    g.userData={body,type:'hide',animPhase:0};g.visible=false;return g;
+    const spookLight=light(g,0xba2858,1.1,6,0,2.16,.7);
+    g.userData={body,head,tendrils,claws,spookLight,type:'spook',animPhase:0};g.visible=false;return g;
   }
   // v3: dimensional detailing for a premium stylized horror silhouette.
   // All additional parts are true meshes attached to the EXISTING animated root.
@@ -244,7 +254,7 @@
   function detailMonster(g,type){
     const u=g.userData,b=u.body||g;
     const d=detailMaterials;
-    if(type==='rush'){
+    if(type==='gale'){
       // Skull-like asymmetrical rigid cheekbones and layered shadow plates.
       for(const sign of [-1,1]){
         orb(b,d.ash,sign*.73,.10,.64,.31,.21,.22).rotation.z=sign*.45;
@@ -259,7 +269,7 @@
       }
       // Subtle fractured crest, not a glowing flat decal.
       for(let i=0;i<5;i++)spike(b,d.ash,[(i-2)*.25,1.04,-.30],[(i-2)*.33,1.38+(i%2)*.15,-.44],.105);
-    }else if(type==='screech'){
+    }else if(type==='whisper'){
       // Barbed antennae and tapering tendril tips emphasize its small scale.
       for(let i=0;i<7;i++){
         const a=2*Math.PI*i/7,x=Math.cos(a),y=Math.sin(a);
@@ -270,7 +280,7 @@
         tube(b,[[sign*.09,.30,.37],[sign*.20,.31,.38],[sign*.30,.21,.33]],.031,d.cartilage);
         orb(b,d.ash,sign*.31,-.17,.20,.14,.22,.14);
       }
-    }else if(type==='dupe'){
+    }else if(type==='decoy'){
       // Dimensional temple growths and multiple rows of real teeth.
       for(let sign of [-1,1]){
         orb(b,d.cartilage,sign*.53,.12,.22,.22,.42,.24).rotation.z=sign*.23;
@@ -279,8 +289,8 @@
         orb(b,d.ash,sign*.60,-.45,-.08,.30,.32,.25);
       }
       for(let i=0;i<5;i++)spike(b,d.cartilage,[(i-2)*.19,.72,-.20],[(i-2)*.25,1.04,-.46],.09);
-    }else if(type==='ambush'){
-      // Broken jade mask / drifting frayed cloth: different silhouette from Rush.
+    }else if(type==='echo'){
+      // Broken jade mask / drifting frayed cloth: different silhouette from Gale.
       const mint=mat(0x66a795,0x3c9084,.36,.61);
       for(const sign of [-1,1]){
         orb(b,mint,sign*.49,.48,.43,.20,.39,.13).rotation.z=sign*.26;
@@ -292,32 +302,23 @@
         const q=spike(b,d.moss,[sign*.70,-.26,Math.sin(a)*.24],[(1.05+(.12*(i%3)))*sign,-1.18-(i%3)*.15,-.5],.14);
         q.rotation.z=.07*(i%3);
       }
-    }else if(type==='seek'){
-      // Shiny organic musculature, sculpted shoulders, clawed hands, eye socket.
+    }else if(type==='ink'){
+      // Glossy ripples and drips so the ink reads as liquid, not a solid body.
       for(let sign of [-1,1]){
-        orb(b,d.gloss,sign*.50,1.80,-.04,.32,.34,.27).rotation.z=sign*.25;
-        for(let i=0;i<3;i++)tube(b,[[sign*(.10+i*.09),2.06,.26],[sign*(.16+i*.10),1.45,.32],[sign*(.08+i*.07),1.02,.25]],.035,d.plum);
-        for(let j=0;j<3;j++)spike(u[sign<0?'leftArm':'rightArm'],d.gloss,[(j-1)*.11,-.81,.22],[(j-1)*.16,-1.13,.48],.045);
+        orb(b,d.gloss,sign*.55,.55,.05,.34,.30,.40).rotation.z=sign*.25;
+        orb(b,d.gloss,sign*.40,.28,-.95,.38,.20,.36);
+        for(let i=0;i<3;i++)spike(b,d.gloss,[sign*(.30+i*.18),.95-i*.12,.45],[sign*(.36+i*.2),.30-i*.05,.62],.05);
       }
-      orb(b,d.ash,0,2.36,.22,.33,.38,.12);
-      orb(b,glow(0xc5a9c4),0,2.37,.345,.21,.21,.022);
-      orb(b,glow(0xf7eee7),-.055,2.44,.371,.035,.055,.014);
-      for(let i=0;i<5;i++)spike(b,d.gloss,[(i-2)*.14,.95,-.23],[(i-2)*.21,.44,-.48],.06);
-    }else if(type==='figure'){
-      // Raised spine vertebrae, layered tendons, jaw ridges and prominent knuckles.
-      for(let i=0;i<7;i++){
-        const y=.96+i*.21;
-        orb(b,d.cartilage,0,y,-.355,.13,.12,.12);
-        for(let sign of [-1,1]){
-          tube(b,[[sign*.1,y,.22],[sign*.37,y+.12,.33],[sign*.44,y+.03,.0]],.033,d.skin);
-        }
+      for(let i=0;i<5;i++)spike(b,d.gloss,[(i-2)*.22,.30,-1.55],[(i-2)*.3,.02,-2.0],.08);
+    }else if(type==='warden'){
+      // Pointed hood, frayed hem folds and a key ring on the belt.
+      spike(u.headGroup,d.plum,[0,.38,-.10],[0,.78,-.42],.17);
+      for(let i=0;i<8;i++){
+        const a=i*2*Math.PI/8;
+        spike(b,d.plum,[Math.cos(a)*.55,.55,Math.sin(a)*.55],[Math.cos(a)*.86,.02,Math.sin(a)*.86],.13);
       }
-      for(let sign of [-1,1]){
-        orb(u.headGroup,d.cartilage,sign*.34,-.18,.22,.19,.34,.17).rotation.z=sign*.15;
-        tube(u.headGroup,[[sign*.25,.35,.18],[sign*.41,.08,.25],[sign*.27,-.4,.20]],.045,d.cartilage);
-      }
-      for(let j=0;j<3;j++)spike(u.headGroup,d.tooth,[(j-1)*.11,-.38,.48],[(j-1)*.15,-.55,.56],.05);
-    }else if(type==='jack'){
+      for(let i=0;i<3;i++)orb(b,d.copper,.30+i*.07,1.30-i*.06,.36,.035,.06,.02);
+    }else if(type==='spook'){
       // Multi-layer hood folds, bone mask cracks and skeletal cheek/jaw parts.
       for(let sign of [-1,1]){
         orb(b,d.plum,sign*.66,2.04,-.03,.28,.49,.31).rotation.z=sign*.32;
@@ -329,38 +330,27 @@
         let a=i*2*Math.PI/6;
         spike(b,d.plum,[Math.cos(a)*.55,1.05+Math.sin(a)*.25,-.10],[Math.cos(a)*1.0,.55+Math.sin(a)*.66,-.43],.12);
       }
-    }else if(type==='hide'){
-      // Smoke-like trailing volume and a skeletal outline around the eyes.
-      for(let sign of [-1,1]){
-        orb(b,d.plum,sign*.28,-.05,-.09,.17,.45,.16).rotation.z=sign*.3;
-        tube(b,[[sign*.26,.38,-.02],[sign*.53,.04,-.20],[sign*.69,-.53,-.49]],.049,d.ash);
-        orb(b,d.cartilage,sign*.15,.13,.19,.11,.07,.034);
-      }
-      for(let i=0;i<4;i++){
-        const x=(i-1.5)*.16;
-        spike(b,d.plum,[x,-.43,-.08],[x*1.55,-1.10,-.38],.11);
-      }
     }
     g.userData.detailVersion=3;
     return g;
   }
 
-  const builders={rush:Rush,screech:Screech,dupe:Dupe,ambush:Ambush,seek:Seek,figure:Figure,jack:Jack,hide:Hide};
+  const builders={gale:Gale,whisper:Whisper,decoy:Decoy,echo:Echo,ink:Ink,warden:Warden,spook:Spook};
   // Keep animation independent of existing AI/collisions: purely visual bobbing and expressions.
   function animate(g,type,dt,time,state={}){
     if(!g || !g.visible)return;
     const u=g.userData;const phase=(u.animPhase||0)+dt;u.animPhase=phase;
     if(u.body){
-      if(type==='seek'||type==='figure')u.body.position.y=Math.sin(phase*(type==='seek'?10:4))*(type==='seek'?.045:.025);
-      else if(type==='rush'||type==='ambush')u.body.position.y=Math.sin(phase*9)*.095;
+      if(type==='ink'||type==='warden')u.body.position.y=Math.sin(phase*(type==='ink'?10:4))*(type==='ink'?.045:.025);
+      else if(type==='gale'||type==='echo')u.body.position.y=Math.sin(phase*9)*.095;
       else u.body.position.y=Math.sin(phase*4.7)*.035;
     }
     if(u.mandible)u.mandible.position.y=-.83+Math.sin(phase*13)*.045;
-    if(type==='dupe'&&u.blades)u.blades.forEach((p,i)=>p.rotation.y=Math.sin(phase*7+i*1.4)*.17);
-    if(type==='jack'&&u.claws)u.claws.forEach((p,i)=>p.rotation.x=Math.sin(phase*7+i*Math.PI)*.23);
-    if(type==='hide')g.scale.setScalar(1+Math.sin(phase*2.7)*.065);
-    if(type==='rush'&&u.ring1){u.ring1.rotation.z+=dt*1.7;u.ring2.rotation.y+=dt*1.9;}
-    if(type==='ambush'&&u.outerCage)u.outerCage.rotation.z+=dt*.9;
+    if(type==='decoy'&&u.blades)u.blades.forEach((p,i)=>p.rotation.y=Math.sin(phase*7+i*1.4)*.17);
+    if(type==='spook'&&u.claws)u.claws.forEach((p,i)=>p.rotation.x=Math.sin(phase*7+i*Math.PI)*.23);
+    if(u.lantern)u.lantern.rotation.z=Math.sin(phase*2.2)*.12;
+    if(type==='gale'&&u.ring1){u.ring1.rotation.z+=dt*1.7;u.ring2.rotation.y+=dt*1.9;}
+    if(type==='echo'&&u.outerCage)u.outerCage.rotation.z+=dt*.9;
   }
-  root.MathDoorsMonsters={create:(name)=>{if(!builders[name])throw new Error('Unknown monster: '+name);return detailMonster(builders[name](),name);},animate,names:Object.keys(builders)};
+  root.NextRoomMonsters={create:(name)=>{if(!builders[name])throw new Error('Unknown monster: '+name);return detailMonster(builders[name](),name);},animate,names:Object.keys(builders)};
 })(window);

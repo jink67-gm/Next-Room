@@ -1,4 +1,4 @@
-/* MATH DOORS V5 — 6학년 2학기 수학 문제은행 (매개변수형 생성기 + 검증)
+/* NEXT ROOM V5 — 6학년 2학기 수학 문제은행 (매개변수형 생성기 + 검증)
  * 단원: ① 분수의 나눗셈 ② 소수의 나눗셈 ③ 공간과 입체 ④ 비례식과 비례배분 ⑤ 원의 둘레와 넓이 ⑥ 원기둥·원뿔·구
  * - 모든 문항은 시드 기반으로 생성되어 같은 시드·같은 순서면 같은 문제가 나온다(체크포인트 복원용).
  * - 한 판 안에서 문제 ID(sig)와 숫자 구성(numSig)이 겹치지 않게 출제한다.
@@ -6,7 +6,7 @@
  */
 (function (root) {
   'use strict';
-  const Core = root.MathDoorsCore || (typeof require !== 'undefined' ? require('./v5-core.js') : null);
+  const Core = root.NextRoomCore || (typeof require !== 'undefined' ? require('./v5-core.js') : null);
   const makeRng = Core.makeRng;
 
   const UNIT_NAMES = {
@@ -82,8 +82,8 @@
     const a = show(core.ans, core.mode);
     const p = base(core.unit, core.gen, core.params, { q: core.q, hint: core.hint, diagram: core.diagram || null, ans: core.ans, mode: core.mode || 'frac', unitLabel: core.unitLabel || '' });
     if (t === 'E') {
-      p.type = 'typeE_dupe'; p.a = a;
-      p.dupeChoices = numChoices(opts.rng, core.ans, core.distract || [], core.mode);
+      p.type = 'typeE_decoy'; p.a = a;
+      p.decoyChoices = numChoices(opts.rng, core.ans, core.distract || [], core.mode);
       p.q = core.q + (core.unitLabel && !core.q.includes(core.unitLabel) ? ' (단위: ' + core.unitLabel + ')' : '');
     } else {
       p.type = 'typeF_device'; p.a = a; p.deviceType = opts.device || core.device || 'gear';
@@ -378,11 +378,11 @@
     if (items.length < 3) return null;
     return matchFrom(4, 'u4_match', items, '가장 간단한 자연수의 비와 연결하세요.', '전항과 후항에 같은 수를 곱하거나 나누어 봅니다.');
   };
-  U4.dupeRatio = function (rng) {
+  U4.decoyRatio = function (rng) {
     const [a, b] = coprimePair(rng, 2, 9), k = rng.int(2, 5);
     const ans = `${a * k} : ${b * k}`;
     const choices = textChoices(rng, ans, [`${a + k} : ${b + k}`, `${b * k} : ${a * k}`, `${a * k} : ${b + k}`]);
-    return base(4, 'u4_equiv', [a, b, k], { type: 'typeE_dupe', q: `${a} : ${b}의 비율과 같은 비가 적힌 문은?`, hint: '전항과 후항에 0이 아닌 같은 수를 곱해도 비율은 같습니다.', a: ans, dupeChoices: choices });
+    return base(4, 'u4_equiv', [a, b, k], { type: 'typeE_decoy', q: `${a} : ${b}의 비율과 같은 비가 적힌 문은?`, hint: '전항과 후항에 0이 아닌 같은 수를 곱해도 비율은 같습니다.', a: ans, decoyChoices: choices });
   };
   U4.bridge = function (rng) {
     const [a, b] = coprimePair(rng, 1, 7), k = rng.int(2, 6);
@@ -581,11 +581,11 @@
     1: { A: r => numericMatch(1, 'u1_match', r, x => U1.core(x, x.int(0, 2)), '나눗셈 식과 몫을 연결하세요.', '나누는 분수의 분모와 분자를 바꾸어 곱합니다.'), B: U1.blank, C: r => cardsFromCores(1, 'u1_cards', r, x => U1.core(x, x.int(0, 2)), '두 식의 몫을 카드에서 골라 배치하세요.', '분수의 나눗셈은 나누는 수의 역수를 곱합니다.'), F: r => U1.core(r), E: r => U1.core(r) },
     2: { A: r => numericMatch(2, 'u2_match', r, x => U2.core(x, x.int(0, 3)), '나눗셈 식과 몫을 연결하세요.', '두 수의 소수점을 같은 자리만큼 옮깁니다.'), B: U2.blank, C: r => cardsFromCores(2, 'u2_cards', r, x => U2.core(x, x.int(0, 3)), '두 식의 몫을 카드에서 골라 배치하세요.', '나누는 수를 자연수로 만들면 쉬워집니다.'), F: r => U2.core(r), E: r => U2.core(r) },
     3: { A: U3.match, D: U3.voxel, F: r => U3.core(r), E: r => U3.core(r), C: r => { const g = randomHeights(r, 5); const f = frontView(g).reduce((a, b) => a + b, 0), s = sideView(g).reduce((a, b) => a + b, 0), t = total(g); if (f === s) return null; const cards = r.shuffle([String(f), String(s), String(t), String(Math.max(f, s) + 1)].filter((v, i, a) => a.indexOf(v) === i)); if (cards.length < 4) return null; return base(3, 'u3_cards', g.flat(), { type: 'typeC_drag', q: '그림은 위에서 본 모양이고 칸의 수는 쌓은 개수입니다. 앞과 옆에서 보이는 정사각형 수를 카드에서 골라 놓으세요.', hint: '앞에서는 세로줄, 옆에서는 가로줄의 가장 높은 층이 보입니다.', slots: [{ label: '앞에서 본 정사각형 수', answer: String(f) }, { label: '오른쪽 옆에서 본 정사각형 수', answer: String(s) }], cards, diagram: { kind: 'topNumbers', grid: g, arrow: 'both' } }); } },
-    4: { A: U4.match, B: r => (r.chance(0.5) ? U4.blank(r) : U4.bridge(r)), C: U4.cards, F: r => U4.core(r), E: r => (r.chance(0.3) ? U4.dupeRatio(r) : U4.core(r)) },
+    4: { A: U4.match, B: r => (r.chance(0.5) ? U4.blank(r) : U4.bridge(r)), C: U4.cards, F: r => U4.core(r), E: r => (r.chance(0.3) ? U4.decoyRatio(r) : U4.core(r)) },
     5: { A: U5.match, B: U5.blank, C: U5.cards, F: r => U5.core(r), E: r => U5.core(r) },
     6: { A: U6.match, C: r => (r.chance(0.45) ? U6.sorter(r) : U6.cards(r)), F: r => U6.core(r), E: r => U6.core(r) }
   };
-  const TYPE_CODE = { A: 'typeA_match', B: 'typeB_blank', C: 'typeC_drag', D: 'typeD_voxel', E: 'typeE_dupe', F: 'typeF_device' };
+  const TYPE_CODE = { A: 'typeA_match', B: 'typeB_blank', C: 'typeC_drag', D: 'typeD_voxel', E: 'typeE_decoy', F: 'typeF_device' };
 
   function generate(unit, code, rng) {
     const fn = TYPE_TABLE[unit][code];
@@ -617,15 +617,15 @@
       const a = parseNum(p.a);
       if (!a) errs.push('answer not numeric'); else if (!rEq(a, p.ans)) errs.push('answer string mismatch');
       if (!(a && a.n > 0)) errs.push('non-positive answer');
-    } else if (p.type === 'typeE_dupe') {
-      if (!Array.isArray(p.dupeChoices) || p.dupeChoices.length !== 3) errs.push('need 3 choices');
+    } else if (p.type === 'typeE_decoy') {
+      if (!Array.isArray(p.decoyChoices) || p.decoyChoices.length !== 3) errs.push('need 3 choices');
       else {
-        if (new Set(p.dupeChoices).size !== 3) errs.push('duplicate choices');
-        if (p.dupeChoices.filter(c => c === p.a).length !== 1) errs.push('answer not exactly once in choices');
+        if (new Set(p.decoyChoices).size !== 3) errs.push('duplicate choices');
+        if (p.decoyChoices.filter(c => c === p.a).length !== 1) errs.push('answer not exactly once in choices');
         // value-distinct for numeric choices
-        const vals = p.dupeChoices.map(parseNum);
+        const vals = p.decoyChoices.map(parseNum);
         if (vals.every(Boolean)) { for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) if (rEq(vals[i], vals[j])) errs.push('choices equal in value'); }
-        p.dupeChoices.forEach(c => { if (String(c).length > 9) errs.push('door label too long: ' + c); });
+        p.decoyChoices.forEach(c => { if (String(c).length > 9) errs.push('door label too long: ' + c); });
       }
     } else if (p.type === 'typeA_match') {
       if (!p.pairs || p.pairs.length !== 3) errs.push('need 3 pairs');
@@ -681,7 +681,7 @@
     this.defUsed = new Set(); this.defCount = 0;
   }
   const KIND_TYPES = {
-    dupe: ['E'], bridge: ['F', 'B'], door: ['F', 'B', 'A', 'C', 'D'], terminal: ['F', 'B', 'A', 'C', 'D'], any: ['F', 'B', 'A', 'C', 'D']
+    decoy: ['E'], bridge: ['F', 'B'], door: ['F', 'B', 'A', 'C', 'D'], terminal: ['F', 'B', 'A', 'C', 'D'], any: ['F', 'B', 'A', 'C', 'D']
   };
   Deck.prototype.draw = function (kind, door) {
     const rng = makeRng('prob', this.seed, door, kind);
@@ -712,7 +712,7 @@
       }
     }
     // last resort (should never happen): any unit, any numeric
-    const p = asNumeric(U1.core(rng, 2) || U1.core(rng, 0) || { unit: 1, gen: 'u1_fallback', params: [door], q: '6 ÷ 3/4 = □', hint: '6 × 4/3', ans: R(8, 1) }, { type: kind === 'dupe' ? 'E' : 'F', rng });
+    const p = asNumeric(U1.core(rng, 2) || U1.core(rng, 0) || { unit: 1, gen: 'u1_fallback', params: [door], q: '6 ÷ 3/4 = □', hint: '6 × 4/3', ans: R(8, 1) }, { type: kind === 'decoy' ? 'E' : 'F', rng });
     p.id = 'PF' + door; p.door = door; p.fallback = true; p.numSig = 'fallback' + door;
     this.history.push(p.sig);
     return p;
@@ -995,5 +995,5 @@
     frontView, sideView, countSolutions, minMaxCount, TYPE_TABLE, TYPE_CODE, KIND_TYPES
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  root.MathDoorsBank = api;
+  root.NextRoomBank = api;
 })(typeof window !== 'undefined' ? window : globalThis);

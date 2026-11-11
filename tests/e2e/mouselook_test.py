@@ -1,4 +1,4 @@
-"""MATH DOORS V6 — 마우스 둘러보기(포인터 잠금) 검증. 실행: MD_LOCK=1 python3 tests/e2e/mouselook_test.py"""
+"""NEXT ROOM V6 — 마우스 둘러보기(포인터 잠금) 검증. 실행: MD_LOCK=1 python3 tests/e2e/mouselook_test.py"""
 import asyncio, sys, os, json
 os.environ['MD_LOCK'] = '1'
 sys.path.insert(0, '/home/claude/v5/tests/e2e')

@@ -1,7 +1,7 @@
-"""MATH DOORS V5 — 개별 시나리오 브라우저 테스트 (실제 조작).
+"""NEXT ROOM V5 — 개별 시나리오 브라우저 테스트 (실제 조작).
 1) 체크포인트: DOOR 5까지 실제 플레이 → 저장 확인 → 새로고침 → 이어하기 → 방 구조·문제·이전 방 문 상태 비교
 2) 손상/구버전 저장 데이터: 무한 로딩 없이 로비로, 정리 안내
-3) 피규어: 들킴 → 옷장 → 심장박동 오답/정답 → 순찰 복귀·안전 시간
+3) 사서: 들킴 → 옷장 → 책 꽂기 오답/정답 → 순찰 복귀·안전 시간
 4) 모바일 터치: 조이스틱 이동, 퍼즐 창 열림 동안 이동/시점 잠김, 닫은 뒤 정상 복귀, 터치 버튼 숨김
 """
 import asyncio, sys, json, math, time
@@ -34,7 +34,7 @@ async def checkpoint_test():
     before = await g.ev(SNAP)
     hearts_before = st['hearts']
     await pg.reload()
-    await pg.wait_for_function("window.MathDoorsDebug && typeof activeRooms !== 'undefined'", timeout=20000)
+    await pg.wait_for_function("window.NextRoomDebug && typeof activeRooms !== 'undefined'", timeout=20000)
     await pg.evaluate('window.__dtCap = 0.34')
     await pg.wait_for_timeout(800)
     vis = await g.ev("!document.getElementById('save-panel').classList.contains('hidden')")
@@ -56,7 +56,7 @@ async def checkpoint_test():
     # corrupt save
     await g.ev("localStorage.setItem('mathDoorsV5_checkpoint', '{broken json')")
     t0 = time.time(); await pg.reload()
-    await pg.wait_for_function("window.MathDoorsDebug && typeof activeRooms !== 'undefined'", timeout=20000)
+    await pg.wait_for_function("window.NextRoomDebug && typeof activeRooms !== 'undefined'", timeout=20000)
     await pg.wait_for_timeout(600)
     note = await g.ev("document.getElementById('save-note').innerText")
     panel = await g.ev("!document.getElementById('save-panel').classList.contains('hidden')")
@@ -64,14 +64,14 @@ async def checkpoint_test():
     record('save: corrupt data → lobby loads, no continue, note shown', lobby and not panel and '정리' in note, f'{time.time()-t0:.1f}s note={note}')
     await g.ev("localStorage.setItem('mathDoorsV5_checkpoint', JSON.stringify({v:4, door:6, seed:1}))")
     await pg.reload()
-    await pg.wait_for_function("window.MathDoorsDebug && typeof activeRooms !== 'undefined'", timeout=20000)
+    await pg.wait_for_function("window.NextRoomDebug && typeof activeRooms !== 'undefined'", timeout=20000)
     await pg.wait_for_timeout(600)
     left = await g.ev("localStorage.getItem('mathDoorsV5_checkpoint')")
     record('save: old-version data removed, game still starts', left is None)
     # valid-looking but mismatched history (e.g. saved by different code) → refused cleanly
     await g.ev("localStorage.setItem('mathDoorsV5_checkpoint', JSON.stringify({v:5, seed:777, maxDoors:10, door:5, units:[3], difficulty:'easy', hearts:3, history:['x','y','z','w']}))")
     await pg.reload()
-    await pg.wait_for_function("window.MathDoorsDebug && typeof activeRooms !== 'undefined'", timeout=20000)
+    await pg.wait_for_function("window.NextRoomDebug && typeof activeRooms !== 'undefined'", timeout=20000)
     await pg.evaluate('window.__dtCap = 0.34')
     await pg.wait_for_timeout(500)
     await pg.click('#continue-btn')
@@ -81,7 +81,7 @@ async def checkpoint_test():
     record('checkpoint: no page errors', not g.errors, '; '.join(g.errors[:3]))
     await b.close(); await p.stop()
 
-async def figure_test():
+async def warden_test():
     p, b, ctx, pg = await launch()
     g = Game(pg, lambda m: print(m, flush=True))
     # find a seed whose door 5 is a library (10-door mode: always) — play to it
@@ -89,16 +89,16 @@ async def figure_test():
     while (await g.state())['door'] < 5:
         if not await play_room(g, g.log): break
     st = await g.state()
-    record('figure: reached library by real play', st['room']['arch'] == 'library' and st['figure']['active'], f"door={st['door']}")
-    # crouch-walk straight at the figure: must be detected by proximity even when crouching
+    record('warden: reached library by real play', st['room']['arch'] == 'library' and st['warden']['active'], f"door={st['door']}")
+    # crouch-walk straight at the warden: right next to it (or inside its lantern cone) the player is detected even when crouching
     await g.set_crouch(True)
     detected = False
     for _ in range(200):
         st = await g.state()
-        f = st['figure']
+        f = st['warden']
         if f['mode'] == 'chase': detected = True; break
         await g.walk_to(f['x'], f['d'], tol=1.0, timeout=0.6, crouch=True)
-    record('figure: crouching close to the figure is NOT always safe (detected)', detected, f"mode={st['figure']['mode']}")
+    record('warden: crouching close to the warden is NOT always safe (detected)', detected, f"mode={st['warden']['mode']}")
     # run to nearest closet and hide while chased
     await g.set_crouch(False)
     t = await g.targets(); p0 = st['player']
@@ -108,36 +108,36 @@ async def figure_test():
     hb_open = False
     for _ in range(120):
         st = await g.state()
-        if st['ui']['heartbeat']: hb_open = True; break
-        if st['closet'] == 'NONE' and st['figure']['mode'] != 'hunt':
+        if st['ui']['shelf']: hb_open = True; break
+        if st['closet'] == 'NONE' and st['warden']['mode'] != 'hunt':
             await g.walk_to(c['x'], c['d'], tol=0.9, timeout=6, crouch=False); await g.key('KeyE')
         await pg.wait_for_timeout(150)
-    record('figure: hiding while chased starts heartbeat', hb_open, f"closet={st['closet']} mode={st['figure']['mode']}")
+    record('warden: hiding while chased starts the shelf quiz', hb_open, f"closet={st['closet']} mode={st['warden']['mode']}")
     if hb_open:
-        await g.ev("() => { hearts = 3; updateHUD(); }")   # 앞방에서 다친 상태와 무관하게 심장박동 규칙만 확인
+        await g.ev("() => { hearts = 3; updateHUD(); }")   # 앞방에서 다친 상태와 무관하게 책 꽂기 규칙만 확인
         h0 = (await g.state())['hearts']
-        await g.answer_choice_modal('heartbeat', False)
+        await g.answer_choice_modal('shelf', False)
         await pg.wait_for_timeout(600)
         st = await g.state()
-        record('figure: wrong heartbeat answer → figure stays (no give-up)', st['ui']['heartbeat'] and st['figure']['hunt'])
-        await g.answer_choice_modal('heartbeat', False)
+        record('warden: wrong shelf answer → warden stays (no give-up)', st['ui']['shelf'] and st['warden']['hunt'])
+        await g.answer_choice_modal('shelf', False)
         await pg.wait_for_timeout(1700)
         st = await g.state()
-        record('figure: 2nd wrong answer → bang (−1 heart; V6.3: lethal at the last heart), still hunting', (st['ui']['heartbeat'] and st['hearts'] == h0 - 1) or (h0 == 1 and not st['playing']), f"hearts {h0}→{st['hearts']}")
-        await g.answer_choice_modal('heartbeat', True)
+        record('warden: 2nd wrong answer → closet shaken (−1 heart; V6.3: lethal at the last heart), still hunting', (st['ui']['shelf'] and st['hearts'] == h0 - 1) or (h0 == 1 and not st['playing']), f"hearts {h0}→{st['hearts']}")
+        await g.answer_choice_modal('shelf', True)
         await pg.wait_for_timeout(500)
         st = await g.state()
-        record('figure: correct answer → heartbeat closes, figure returns to patrol (calm safe time)', not st['ui']['heartbeat'] and not st['figure']['hunt'] and st['figure']['mode'] == 'calm', f"mode={st['figure']['mode']}")
-        # figure moves away / no immediate attack during safe time
+        record('warden: correct answer → shelf quiz closes, warden returns to patrol (calm safe time)', not st['ui']['shelf'] and not st['warden']['hunt'] and st['warden']['mode'] == 'calm', f"mode={st['warden']['mode']}")
+        # warden moves away / no immediate attack during safe time
         h1 = st['hearts']
         await pg.wait_for_timeout(1500)
         await g.key('KeyE'); await pg.wait_for_timeout(1200)
         st = await g.state()
-        record('figure: can leave closet after correct answer, not hit during safe time', st['closet'] == 'NONE' and st['hearts'] == h1)
-    # figure never inside a shelf: sample its positions
-    bad = await g.ev("""() => new Promise(res => { let bad = 0, n = 0; const t0 = performance.now(); (function f(){ const r = activeRooms[currentDoor]; if (r && figureState.active) { n++; if (MathDoorsCore.pointBlocked(r.layout, figureState.lx, figureState.ld, 0.45, {crouch:true, exitOpen:false})) bad++; } if (performance.now() - t0 < 6000) requestAnimationFrame(f); else res({bad, n}); })(); })""")
-    record('figure: never overlaps shelves/walls while moving (sampled 6 s)', bad['bad'] == 0 and bad['n'] > 10, str(bad))
-    record('figure: no page errors', not g.errors, '; '.join(g.errors[:3]))
+        record('warden: can leave closet after correct answer, not hit during safe time', st['closet'] == 'NONE' and st['hearts'] == h1)
+    # warden never inside a shelf: sample its positions
+    bad = await g.ev("""() => new Promise(res => { let bad = 0, n = 0; const t0 = performance.now(); (function f(){ const r = activeRooms[currentDoor]; if (r && wardenState.active) { n++; if (NextRoomCore.pointBlocked(r.layout, wardenState.lx, wardenState.ld, 0.45, {crouch:true, exitOpen:false})) bad++; } if (performance.now() - t0 < 6000) requestAnimationFrame(f); else res({bad, n}); })(); })""")
+    record('warden: never overlaps shelves/walls while moving (sampled 6 s)', bad['bad'] == 0 and bad['n'] > 10, str(bad))
+    record('warden: no page errors', not g.errors, '; '.join(g.errors[:3]))
     await b.close(); await p.stop()
 
 async def mobile_test():
@@ -197,48 +197,48 @@ async def mobile_test():
     await pg.screenshot(path='/home/claude/mobile.png')
     await b.close(); await p.stop()
 
-async def rush_hide_test():
+async def gale_breath_test():
     p, b, ctx, pg = await launch()
     g = Game(pg, lambda m: print(m, flush=True))
-    # 러쉬가 있는 일반 방(미로·암실 제외)을 계획표에서 찾는다
-    seed, dn = await g.ev("() => { for (let seed = 1; seed < 500; seed++) { const P = MathDoorsCore.planStage(20, seed).rooms; for (let n = 3; n <= 19; n++) { const r = P[n]; if (r && r.events.rush && !r.events.screech && !['maze', 'darkRoom', 'keySearch'].includes(r.arch)) return [seed, n]; } } }")
+    # 돌풍이 있는 일반 방(미로·암실 제외)을 계획표에서 찾는다
+    seed, dn = await g.ev("() => { for (let seed = 1; seed < 500; seed++) { const P = NextRoomCore.planStage(20, seed).rooms; for (let n = 3; n <= 19; n++) { const r = P[n]; if (r && r.events.gale && !r.events.whisper && !['maze', 'darkRoom', 'keySearch'].includes(r.arch)) return [seed, n]; } } }")
     await g.ev(f"startGame({{seed:{seed}, maxDoors:20, door:{dn}, units:[1,2,3,4,5,6], difficulty:'easy', hearts:3}})")
     await pg.wait_for_timeout(300)
     await g.hook_hits()
     st = await g.state()
-    record(f'rush: plan schedules rush in DOOR {dn} (seed {seed})', st['room']['events']['rush'])
-    # 예약된 러쉬를 잠시 보류 → 옷장 근처(3 m)까지 걸어간 뒤 같은 러쉬를 발생시킨다
+    record(f'gale: plan schedules gale in DOOR {dn} (seed {seed})', st['room']['events']['gale'])
+    # 예약된 돌풍을 잠시 보류 → 옷장 근처(3 m)까지 걸어간 뒤 같은 돌풍을 발생시킨다
     # (테스트 환경은 화면이 초당 3~5장이라 자동 조작이 꺾인 방을 실제 학생보다 훨씬 느리게 걷기 때문)
-    await g.ev("() => { clearTimeout(rushSpawnTimerId); clearTimeout(screechSpawnTimerId); }")
+    await g.ev("() => { clearTimeout(galeSpawnTimerId); clearTimeout(whisperSpawnTimerId); }")
     t = await g.targets(); pl = (await g.state())['player']
     c = min(t['closets'], key=lambda c: math.hypot(c['x'] - pl['x'], c['d'] - pl['d']))
     await g.walk_to(c['x'], c['d'], tol=1.6, timeout=60)   # 옷장 바로 앞
-    await g.ev("triggerRushEvent()")
+    await g.ev("triggerGaleEvent()")
     for _ in range(200):
         st = await g.state()
-        if st['rush']['warning']: break
+        if st['gale']['warning']: break
         await pg.wait_for_timeout(100)
-    # 경고가 들리면 옷장으로 숨는다 → V6.2: 걸쇠 문제 없이 러쉬가 그대로 지나가야 한다
+    # 경고가 들리면 옷장으로 숨는다 → V6.2: 걸쇠 문제 없이 돌풍이 그대로 지나가야 한다
     r = await g.walk_to(c['x'], c['d'], tol=0.9, timeout=25)
     await g.key('KeyE')
     h0 = (await g.state())['hearts']
     em = False; phases = set()
     for _ in range(300):
-        st = await g.state(); phases.add(st['rush']['phase'])
+        st = await g.state(); phases.add(st['gale']['phase'])
         if st['ui']['emergency']: em = True
-        if not st['rush']['active'] and not st['rush']['warning'] and 'SWEEPING' in phases: break
+        if not st['gale']['active'] and not st['gale']['warning'] and 'SWEEPING' in phases: break
         await pg.wait_for_timeout(100)
     st = await g.state()
-    record('rush: hidden in a closet → NO latch quiz while it passes (V6.2)', not em and st['closet'] == 'HIDDEN', f"walk={r} closet={st['closet']} phases={sorted(phases)}")
-    record('rush: sweeps past the hidden player with no damage', 'SWEEPING' in phases and st['hearts'] == h0, f"hearts {h0}→{st['hearts']}")
+    record('gale: hidden in a closet → NO latch quiz while it passes (V6.2)', not em and st['closet'] == 'HIDDEN', f"walk={r} closet={st['closet']} phases={sorted(phases)}")
+    record('gale: sweeps past the hidden player with no damage', 'SWEEPING' in phases and st['hearts'] == h0, f"hearts {h0}→{st['hearts']}")
     await g.key('KeyE'); await pg.wait_for_timeout(1200)
     st = await g.state()
-    record('rush: player can leave the closet afterwards in the SAME room', st['door'] == dn and st['closet'] == 'NONE', str(st['player']))
-    # Hide: stay in closet with no danger → knocks → ejected
+    record('gale: player can leave the closet afterwards in the SAME room', st['door'] == dn and st['closet'] == 'NONE', str(st['player']))
+    # 숨 게이지: 위험이 없는데 옷장에 오래 있으면 숨이 차서 스스로 나온다 (피해 없음)
     await pg.wait_for_timeout(5000)
     st = await g.state(); pl = st['player']
     c = min(t['closets'], key=lambda c: math.hypot(c['x'] - pl['x'], c['d'] - pl['d']))
-    for attempt in range(3):   # 러쉬가 막 지나간 직후엔 옷장이 잠깐 닫혀 있을 수 있어 몇 번 다시 시도
+    for attempt in range(3):   # 돌풍이 막 지나간 직후엔 옷장이 잠깐 닫혀 있을 수 있어 몇 번 다시 시도
         await g.walk_to(c['x'], c['d'], tol=0.9, timeout=12)
         prox_txt = await g.ev("document.getElementById('proximity-btn').classList.contains('hidden') ? '(none)' : document.getElementById('proximity-text').innerText")
         await g.key('KeyE'); await pg.wait_for_timeout(1500)
@@ -246,24 +246,27 @@ async def rush_hide_test():
         hidden_at = st['closet']
         if hidden_at == 'HIDDEN': break
         await pg.wait_for_timeout(1500)
-    g.log(f'    hide try: prompt={prox_txt} closet={hidden_at} player={st["player"]} closet_at={c}')
+    g.log(f'    breath try: prompt={prox_txt} closet={hidden_at} player={st["player"]} closet_at={c}')
     h1 = st['hearts']; ejected = False; tsec = 0
+    n_hits = len(await g.ev('window.__hits'))
     for i in range(300):
         st = await g.state()
         if st['closet'] == 'NONE': ejected = True; tsec = i * 0.1; break
         await pg.wait_for_timeout(100)
     hits = await g.ev('window.__hits')
-    record('hide: staying in a closet with no danger → Hide ejects the player', hidden_at == 'HIDDEN' and ejected and any('하이드' in h['title'] for h in hits), f'after ~{tsec:.0f}s, hearts {h1}→{st["hearts"]}')
-    record('rush/hide: no page errors', not g.errors, '; '.join(g.errors[:3]))
+    toast = await g.ev("document.getElementById('toast-text').innerText")
+    record('breath: staying in a closet with no danger → breath runs out, player comes out', hidden_at == 'HIDDEN' and ejected and '숨이 차서' in toast, f'after ~{tsec:.0f}s, toast={toast}')
+    record('breath: running out of breath does no damage', st['hearts'] == h1 and len(hits) == n_hits, f'hearts {h1}→{st["hearts"]}')
+    record('gale/breath: no page errors', not g.errors, '; '.join(g.errors[:3]))
     await b.close(); await p.stop()
 
 async def main(which):
-    if 'rush' in which: await rush_hide_test()
+    if 'gale' in which: await gale_breath_test()
     if 'mobile' in which: await mobile_test()
     if 'checkpoint' in which: await checkpoint_test()
-    if 'figure' in which: await figure_test()
+    if 'warden' in which: await warden_test()
     print('SUMMARY', sum(1 for r in RESULTS if r[1]), '/', len(RESULTS))
     json.dump(RESULTS, open('/home/claude/scenario_results_%s.json' % '_'.join(which), 'w'), ensure_ascii=False, indent=1)
 
 if __name__ == '__main__':
-    asyncio.run(main(sys.argv[1:] or ['mobile', 'checkpoint', 'figure']))
+    asyncio.run(main(sys.argv[1:] or ['mobile', 'checkpoint', 'warden']))

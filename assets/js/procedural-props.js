@@ -1,4 +1,4 @@
-/* MATH DOORS — original procedural 3D asset library (Three.js r128)
+/* NEXT ROOM — original procedural 3D asset library (Three.js r128)
    Objects are actual volumetric geometry, not billboard sprites.
    This file deliberately exports plain functions for the existing single-page game. */
 (function () {
@@ -646,7 +646,7 @@
  }
  // 단말기 받침: 시즌3은 돌 받침 + 청동 머리 (성에 맞게)
  const SEASON_ITEM={v:1};
- window.MathDoorsProps={SEASON_ITEM,MAT,createMonolith,createPedestal,createWardrobe,createDrawer,createTerminal,createBridge,
+ window.NextRoomProps={SEASON_ITEM,MAT,createMonolith,createPedestal,createWardrobe,createDrawer,createTerminal,createBridge,
    createGearLock,decorateDoorLeaf,trimDoorFrame,createBookshelf,createCrates,decorateRoom,
    makeStandingLamp,makeSideTable,makeClock,makeWallSconce,cube,round,cyl,torus,roundedBox,bevelFor,detailTex,
    applySeasonStyle,makeSeasonSconce,makeSeasonStandingLamp,makeSeasonSideTable,makeSeasonClock,makeSeasonWallArt,makeSeasonBed,createMetalRack,makeBoilerTank};

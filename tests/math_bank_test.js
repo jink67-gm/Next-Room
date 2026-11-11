@@ -1,9 +1,9 @@
-/* MATH DOORS V5 — 수학 문제은행 검증 (Node.js)
+/* NEXT ROOM V5 — 수학 문제은행 검증 (Node.js)
  * 실행: node tests/math_bank_test.js
  * 1) 모든 단원 × 유형 생성기를 대량 생성해 구조 검사(validateProblem)
  * 2) 생성기가 계산한 정답을 "독립적인 별도 계산"으로 다시 구해 비교 (params 사용)
  * 3) 30문 모드: 단원 하나만 골라도 한 판 안에서 문제 ID·숫자 구성 중복 없음, 고갈 시에도 매개변수형 새 문항
- * 4) 듀프(3개 문) / 다리 문제가 모든 단원 선택에서 생성되는지
+ * 4) 오답이(3개 문) / 다리 문제가 모든 단원 선택에서 생성되는지
  * 5) 쌓기나무: 위·앞·옆·개수로 정답이 하나뿐인지, 그림에 높이가 드러나지 않는지
  * 6) 입력 채점: 2/4 = 1/2 = 0.5 동치 인정, 잘못된 형식 거부
  * 7) 선 잇기: 오른쪽 보기에 계산식 표시 금지, 값 중복 금지
@@ -11,7 +11,7 @@
 'use strict';
 const path = require('path');
 const C = require(path.join(__dirname, '..', 'assets', 'js', 'v5-core.js'));
-global.MathDoorsCore = C;
+global.NextRoomCore = C;
 const B = require(path.join(__dirname, '..', 'assets', 'js', 'math-bank-v5.js'));
 let failures = 0;
 const fail = m => { failures++; if (failures < 40) console.log('FAIL', m); };
@@ -83,7 +83,7 @@ for (const u of [1, 2, 3, 4, 5, 6]) {
       const errs = B.validateProblem(p);
       if (errs.length) fail(`${u}${code} ${p.gen}: ${errs.join(', ')} :: ${p.q}`);
       if (p.unit !== u) fail('unit mismatch');
-      if (p.type === 'typeF_device' || p.type === 'typeE_dupe') {
+      if (p.type === 'typeF_device' || p.type === 'typeE_decoy') {
         const ind = independentAnswer(p);
         if (ind) {
           checked++;
@@ -132,10 +132,10 @@ for (const units of UNIT_SETS) {
       if (p.fallback) fail('deck fallback used ' + units);
       if (sig.has(p.sig)) fail('duplicate problem id in one game ' + p.sig);
       if (num.has(p.numSig)) fail('duplicate number composition ' + p.numSig);
-      { const key = p.q + JSON.stringify(p.pairs || p.blanks || p.slots || p.dupeChoices || '') + JSON.stringify(p.diagram || '') + JSON.stringify(p.targetGrid || '') + (p.equationTemplate || ''); if (qtext.has(key)) fail('duplicate question text: ' + p.gen + ' ' + p.q); qtext.add(key); }
+      { const key = p.q + JSON.stringify(p.pairs || p.blanks || p.slots || p.decoyChoices || '') + JSON.stringify(p.diagram || '') + JSON.stringify(p.targetGrid || '') + (p.equationTemplate || ''); if (qtext.has(key)) fail('duplicate question text: ' + p.gen + ' ' + p.q); qtext.add(key); }
       sig.add(p.sig); num.add(p.numSig);
       if (!units.includes(p.unit)) fail('unit leak');
-      if (r.puzzle === 'dupe' && (p.type !== 'typeE_dupe' || p.dupeChoices.length !== 3)) fail('dupe problem missing for units ' + units);
+      if (r.puzzle === 'decoy' && (p.type !== 'typeE_decoy' || p.decoyChoices.length !== 3)) fail('decoy problem missing for units ' + units);
       if (r.puzzle === 'bridge' && p.deviceType !== 'bridge') fail('bridge problem missing for units ' + units);
     }
     const defSeen = new Set();
@@ -185,7 +185,7 @@ if (failures) { console.log(`FAILED: ${failures}`); process.exit(1); }
 console.log('type coverage:', JSON.stringify(typeCount));
 console.log(`PASS: math bank verified in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
-// ---------- 8) 옷장 걸쇠(러쉬)·심장박동 문제: 글만 보고 풀 수 있고, 보기 3개가 서로 다르고, 정답이 맞는지 ----------
+// ---------- 8) 옷장 걸쇠(돌풍)·책 꽂기 문제: 글만 보고 풀 수 있고, 보기 3개가 서로 다르고, 정답이 맞는지 ----------
 (function defenseCheck() {
   const parse = s => { s = String(s).replace(/\s*(개|cm²|cm)$/, ''); const rr = s.match(/^(\d+) : (\d+)$/); if (rr) return +rr[1] * 1000 + +rr[2]; const m = s.match(/^(\d+)\/(\d+)$/); if (m) return +m[1] / +m[2]; return parseFloat(s); };
   const evalSide = s => { const m = s.match(/^(\d+)\/(\d+)$/); return m ? +m[1] / +m[2] : parseFloat(s); };
@@ -198,7 +198,7 @@ console.log(`PASS: math bank verified in ${((Date.now() - t0) / 1000).toFixed(1)
       qs.add(p.q);
       if (p.diagram) fail('defense has diagram (unsolvable in latch popup): ' + p.q);
       if (!p.q.startsWith('[')) fail('defense missing unit label ' + p.q);
-      if (/위에서 본 모양에 쌓은|그림|\?/.test(p.q)) fail('defense refers to a figure: ' + p.q);
+      if (/위에서 본 모양에 쌓은|그림|\?/.test(p.q)) fail('defense refers to a warden: ' + p.q);
       if (p.q.length > 90) fail('defense too long: ' + p.q);
       if (p.choices.length !== 3 || new Set(p.choices).size !== 3 || !p.choices.includes(p.a)) fail('defense choices ' + JSON.stringify(p));
       const nums = p.choices.map(parse);
@@ -218,5 +218,5 @@ console.log(`PASS: math bank verified in ${((Date.now() - t0) / 1000).toFixed(1)
     console.log(`defense unit ${u}: ${qs.size} different questions`);
   }
   console.log(`defense: ${n} drawn, ${checked} independently recomputed`);
-  if (failures) { console.log('FAILED', failures); process.exit(1); } else console.log('PASS: closet-latch / heartbeat questions solvable without figures, 3 distinct choices, answers verified');
+  if (failures) { console.log('FAILED', failures); process.exit(1); } else console.log('PASS: closet-latch / shelf-quiz questions solvable without figures, 3 distinct choices, answers verified');
 })();

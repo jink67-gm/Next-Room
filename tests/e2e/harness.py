@@ -1,6 +1,6 @@
-"""MATH DOORS V5 — Playwright 기반 실제 브라우저 시나리오 하네스.
+"""NEXT ROOM V5 — Playwright 기반 실제 브라우저 시나리오 하네스.
 게임을 실제로 실행하고, 키보드(W/C/E/F)와 마우스 클릭으로 조작한다.
-시점 방향만 MathDoorsDebug.lookAtLocal 로 맞춘다(마우스 드래그 대신). 위치를 순간이동시키지 않는다.
+시점 방향만 NextRoomDebug.lookAtLocal 로 맞춘다(마우스 드래그 대신). 위치를 순간이동시키지 않는다.
 """
 import asyncio, json, math, time
 from playwright.async_api import async_playwright
@@ -21,10 +21,10 @@ class Game:
         return await self.pg.evaluate(js, arg) if arg is not None else await self.pg.evaluate(js)
 
     async def state(self):
-        return await self.ev('MathDoorsDebug.state()')
+        return await self.ev('NextRoomDebug.state()')
 
     async def targets(self):
-        return await self.ev('MathDoorsDebug.targets()')
+        return await self.ev('NextRoomDebug.targets()')
 
     async def start(self, doors=10, diff='normal', units=(1, 2, 3, 4, 5, 6), seed=None):
         await self.ev(f"""() => {{ {'window.__forceSeed=%d;' % seed if seed is not None else 'delete window.__forceSeed;'}
@@ -36,7 +36,7 @@ class Game:
 
     async def hook_hits(self):
         await self.pg.evaluate("""() => { if (window.__hitHooked) return; window.__hitHooked = true; const orig = applyPlayerHitEffect; window.__hits = [];
-            applyPlayerHitEffect = function(o){ window.__hits.push({door: currentDoor, title: o.title, hearts: hearts, fig: figureState.mode}); return orig(o); }; }""")
+            applyPlayerHitEffect = function(o){ window.__hits.push({door: currentDoor, title: o.title, hearts: hearts, fig: wardenState.mode}); return orig(o); }; }""")
 
     async def key(self, k, hold=0.0):
         if hold:
@@ -54,9 +54,9 @@ class Game:
     async def walk_to(self, tx, td, tol=0.55, timeout=40.0, crouch='auto', stop_on=None):
         """경로 탐색으로 얻은 지점들을 따라 W키를 누른 채 시점을 돌리며 걸어간다."""
         t0 = time.time()
-        path = await self.ev('([x,d]) => MathDoorsDebug.pathLocal(x,d)', [tx, td])
+        path = await self.ev('([x,d]) => NextRoomDebug.pathLocal(x,d)', [tx, td])
         if not path:
-            info = await self.ev("() => { const r=MathDoorsDebug.room(); const lp=toLocal(r,player.x,player.z); const st=Object.assign(roomCollisionState(r),{crouch:true}); const g=MathDoorsCore.makeGrid(r.layout,st,MathDoorsCore.PLAYER_R+0.06,0.25); return {door: currentDoor, lp, blocked: MathDoorsCore.pointBlocked(r.layout,lp.x,lp.d,0.48,st), near: MathDoorsCore.nearestFree(g,lp.x,lp.d,1.2), closet: closetState, L: r.roomLen}; }")
+            info = await self.ev("() => { const r=NextRoomDebug.room(); const lp=toLocal(r,player.x,player.z); const st=Object.assign(roomCollisionState(r),{crouch:true}); const g=NextRoomCore.makeGrid(r.layout,st,NextRoomCore.PLAYER_R+0.06,0.25); return {door: currentDoor, lp, blocked: NextRoomCore.pointBlocked(r.layout,lp.x,lp.d,0.48,st), near: NextRoomCore.nearestFree(g,lp.x,lp.d,1.2), closet: closetState, L: r.roomLen}; }")
             self.log(f'  ! no path to ({tx:.1f},{td:.1f}) diag={info}')
             await self.pg.keyboard.down('w'); await self.pg.wait_for_timeout(250); await self.pg.keyboard.up('w')
             return False
@@ -69,7 +69,7 @@ class Game:
                 st = await self.state()
                 if stop_on and await stop_on(st):
                     return 'stopped'
-                if not st['playing'] or st['closet'] != 'NONE' or any(st['ui'][k] for k in ('puzzle', 'emergency', 'heartbeat')):
+                if not st['playing'] or st['closet'] != 'NONE' or any(st['ui'][k] for k in ('puzzle', 'emergency', 'shelf')):
                     if holding: await self.pg.keyboard.up('w'); holding = False
                     return 'interrupted'
                 p = st['player']
@@ -83,19 +83,19 @@ class Game:
                 if math.hypot(tx - p['x'], td - p['d']) < tol:
                     return True
                 if crouch == 'auto':
-                    need = await self.ev('([x,d]) => { const r=MathDoorsDebug.room(); const st=roomCollisionState(r); st.crouch=false; return MathDoorsCore.pointBlocked(r.layout,x,d,MathDoorsCore.PLAYER_R,st) && !MathDoorsCore.pointBlocked(r.layout,x,d,MathDoorsCore.PLAYER_R,Object.assign(st,{crouch:true})); }', [goal['x'], goal['d']])
-                    nearBeam = await self.ev('([x,d]) => { const r=MathDoorsDebug.room(); return (r.lowBeams||[]).some(b=>Math.abs(d-b.d)<b.hd+1.0 && Math.abs(x-b.x)<b.hw+0.5); }', [p['x'], p['d']])
+                    need = await self.ev('([x,d]) => { const r=NextRoomDebug.room(); const st=roomCollisionState(r); st.crouch=false; return NextRoomCore.pointBlocked(r.layout,x,d,NextRoomCore.PLAYER_R,st) && !NextRoomCore.pointBlocked(r.layout,x,d,NextRoomCore.PLAYER_R,Object.assign(st,{crouch:true})); }', [goal['x'], goal['d']])
+                    nearBeam = await self.ev('([x,d]) => { const r=NextRoomDebug.room(); return (r.lowBeams||[]).some(b=>Math.abs(d-b.d)<b.hd+1.0 && Math.abs(x-b.x)<b.hw+0.5); }', [p['x'], p['d']])
                     await self.set_crouch(bool(need or nearBeam))
                 elif crouch in (True, False):
                     await self.set_crouch(crouch)
-                await self.ev('([x,d]) => MathDoorsDebug.lookAtLocal(x,d)', [goal['x'], goal['d']])
+                await self.ev('([x,d]) => NextRoomDebug.lookAtLocal(x,d)', [goal['x'], goal['d']])
                 if not holding:
                     await self.pg.keyboard.down('w'); holding = True
                 await self.pg.wait_for_timeout(70)
                 if last_pos and math.hypot(p['x'] - last_pos[0], p['d'] - last_pos[1]) < 0.01:
                     stuck += 1
                     if stuck > 25:
-                        path = await self.ev('([x,d]) => MathDoorsDebug.pathLocal(x,d)', [tx, td]) or path; idx = 0; stuck = 0
+                        path = await self.ev('([x,d]) => NextRoomDebug.pathLocal(x,d)', [tx, td]) or path; idx = 0; stuck = 0
                 else:
                     stuck = 0
                 last_pos = (p['x'], p['d'])
@@ -105,7 +105,7 @@ class Game:
             if holding: await self.pg.keyboard.up('w')
 
     async def solve_open_puzzle(self, correct=True):
-        prob = await self.ev('MathDoorsDebug.problem()')
+        prob = await self.ev('NextRoomDebug.problem()')
         t = prob['type']
         if t == 'typeA_match':
             order = await self.ev('puzzleState.shuffledRight.map(o=>o.matchIdx)')
@@ -140,18 +140,18 @@ class Game:
             ans = prob['a'] if correct else (prob['a'] + '1')
             for ch in ans: await self.pg.keyboard.press(ch)
             await self.pg.keyboard.press('Enter')
-        elif t == 'typeE_dupe':
+        elif t == 'typeE_decoy':
             await self.pg.click('#non-numeric-submit-btn')
         await self.pg.wait_for_timeout(250)
         return t
 
     async def answer_choice_modal(self, which, correct=True):
-        """긴급(옷장 걸쇠)·심장박동 모달에서 보기 버튼 클릭."""
+        """긴급(옷장 걸쇠)·책 꽂기 모달에서 보기 버튼 클릭."""
         box = '#em-choices' if which == 'emergency' else '#hb-choices'
         ans = await self.ev(f"""() => {{ const btns=[...document.querySelectorAll('{box} button')]; return btns.map(b=>b.innerText.replace(/\\s+/g,'')); }}""")
-        prob = await self.ev("hb.prob") if which == 'heartbeat' else None
+        prob = await self.ev("hb.prob") if which == 'shelf' else None
         # 정답 문자열 비교: 정답은 deck이 반환한 a. 화면 표시(세로 분수)는 innerText가 '3\\n4' 형태라 비교를 위해 동일 정규화
-        a_norm = await self.ev(f"""() => {{ const p = {'hb.prob' if which=='heartbeat' else 'window.__lastDefense'}; if(!p) return null; const d=document.createElement('div'); d.innerHTML=formatMathHTML(p.a); document.body.appendChild(d); const t=d.innerText.replace(/\\s+/g,''); d.remove(); return t; }}""")
+        a_norm = await self.ev(f"""() => {{ const p = {'hb.prob' if which=='shelf' else 'window.__lastDefense'}; if(!p) return null; const d=document.createElement('div'); d.innerHTML=formatMathHTML(p.a); document.body.appendChild(d); const t=d.innerText.replace(/\\s+/g,''); d.remove(); return t; }}""")
         idx = ans.index(a_norm) if (a_norm in ans and correct) else ([i for i, x in enumerate(ans) if x != a_norm][0])
         await self.pg.click(f'{box} button >> nth={idx}')
         await self.pg.wait_for_timeout(200)
@@ -173,7 +173,7 @@ async def launch(viewport=(480, 300), mobile=False, dtcap=0.34):
     if os.environ.get('MD_FRESH') != '1':
         await pg.add_init_script("try { localStorage.setItem('mathDoorsCleared', '3'); } catch (e) {}")
     await pg.goto(BASE)
-    await pg.wait_for_function("window.MathDoorsDebug && typeof activeRooms !== 'undefined' && isPlaying === false", timeout=20000)
+    await pg.wait_for_function("window.NextRoomDebug && typeof activeRooms !== 'undefined' && isPlaying === false", timeout=20000)
     await pg.evaluate(f'window.__dtCap = {dtcap}')
     await pg.wait_for_timeout(800)
     return p, b, ctx, pg

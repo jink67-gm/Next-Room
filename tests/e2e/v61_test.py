@@ -1,4 +1,4 @@
-"""MATH DOORS V6.1 — 교사 피드백 검증
+"""NEXT ROOM V6.1 — 교사 피드백 검증
 1) 단계 잠금: 처음엔 쉬움만 열림 → 쉬움 탈출 시 보통, 보통 탈출 시 도전이 열림 / ?teacher 는 모두 열림
 2) 문제 푸는 곳 = 장치(패널) 한 곳: 문 앞(석문 옆 틈 포함)에서는 문제가 열리지 않고, 장치에서만 열림
 3) 시즌 아이템은 장치에 끼움 (부족하면 문제가 안 열림) / 단서 쪽지 버튼으로 멀리서 문제를 열 수 없음
@@ -18,7 +18,7 @@ async def ui(g):
     return await g.ev("""() => ({ locked: ['easy','normal','challenge'].filter(d => document.getElementById('diff-btn-' + d).classList.contains('diff-locked')),
       diff: gameDifficulty, toast: document.getElementById('toast-text') ? document.getElementById('toast-text').innerText : '' })""")
 
-FIND = """(want) => { for (let s = 1; s < 400; s++) { MathDoorsCore.setSeason(want.season); const P = MathDoorsCore.planStage(10, s).rooms;
+FIND = """(want) => { for (let s = 1; s < 400; s++) { NextRoomCore.setSeason(want.season); const P = NextRoomCore.planStage(10, s).rooms;
   for (let n = 2; n <= 9; n++) { const r = P[n]; if (!r) continue;
     if (want.kind === 'monolith' && r.puzzleDevice === 'monolith') return [s, n];
     if (want.kind === 'key' && r.arch === 'keySearch') return [s, n]; } } return null; }"""
@@ -55,11 +55,11 @@ async def main():
     u = await ui(g)
     record('after 보통: 도전 open too', u['locked'] == [], str(u))
     await g.ev("localStorage.removeItem('mathDoorsCleared')")
-    await pg.goto(BASE.replace('index.html', 'index.html?teacher')); await pg.wait_for_function("window.MathDoorsDebug && isPlaying === false")
+    await pg.goto(BASE.replace('index.html', 'index.html?teacher')); await pg.wait_for_function("window.NextRoomDebug && isPlaying === false")
     await pg.wait_for_timeout(500)
     u = await ui(g)
     record('?teacher opens every difficulty for the teacher', u['locked'] == [], str(u))
-    await pg.goto(BASE); await pg.wait_for_function("window.MathDoorsDebug && isPlaying === false")
+    await pg.goto(BASE); await pg.wait_for_function("window.NextRoomDebug && isPlaying === false")
     await g.ev("window.__unlockAll = true; window.__dtCap = 0.34")
     # ---------- 2) 석문 방: 문 앞에서는 문제가 열리지 않음
     found = None
