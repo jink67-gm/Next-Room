@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>NEXT ROOM : 6학년 2학기 3D 방탈출</title>
   <!-- V5: Tailwind는 미리 빌드한 CSS, Three.js r128은 저장소 안의 파일을 먼저 사용 (CDN이 막힌 학교망에서도 실행) -->
-  <link rel="stylesheet" href="assets/css/tailwind.css?v=7">
+  <link rel="stylesheet" href="assets/css/tailwind.css?v=8">
   <script src="assets/vendor/three.min.js"></script>
   <script>if(!window.THREE){document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');}</script>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Pretendard:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -602,11 +602,11 @@
     </div>
   </div>
 
-  <script src="assets/js/audio-manager.js?v=7"></script>
-  <script src="assets/js/procedural-props.js?v=7"></script>
-  <script src="assets/js/monster-models-v2.js?v=7"></script>
-  <script src="assets/js/v5-core.js?v=7"></script>
-  <script src="assets/js/math-bank-v5.js?v=7"></script>
+  <script src="assets/js/audio-manager.js?v=8"></script>
+  <script src="assets/js/procedural-props.js?v=8"></script>
+  <script src="assets/js/monster-models-v2.js?v=8"></script>
+  <script src="assets/js/v5-core.js?v=8"></script>
+  <script src="assets/js/math-bank-v5.js?v=8"></script>
   <script>
     function toggleGuide(show) {
       const m = document.getElementById('guide-modal');
@@ -4256,6 +4256,8 @@
       wardenState.attackCooldown = 0;
       wardenState.lostTimer = 0; wardenState.calmTimer = 0; wardenState.searchTimer = 0;
       wardenState.hunt = false;
+      wardenState.seekTimer = 4.0;   // 처음 찾아 나서기까지 (이후 난이도별 간격)
+      wardenState.idleT = 0;
       // 책장을 피해 다니는 이동 격자 (반지름 0.5 m)
       wardenState.nav = Core.makeGrid(curRoom.layout, { crouch: true, exitOpen: false, bridged: true, deviceDone: true, gateOpen: false }, 0.5, 0.5);
       wardenState.room = curRoom.doorNum;
@@ -4266,6 +4268,8 @@
 
     // 사서의 등불 시야: 반각·거리. 웅크리면 절반 거리, 손전등을 켜면 더 멀리서도 보인다. 책장·벽 뒤는 보이지 않는다.
     const WARDEN_HALF_ANGLE = 0.66;   // 약 38°
+    // 순찰 중 플레이어 쪽을 살피러 가는 간격(초)
+    function wardenSeekEvery() { return gameDifficulty === 'easy' ? 9 : (gameDifficulty === 'challenge' ? 5 : 7); }
     function wardenSightRange() { return 9.5 * (gameDifficulty === 'easy' ? 0.82 : (gameDifficulty === 'challenge' ? 1.2 : 1.0)) * (SEASON === 3 ? 1.05 : 1); }
     function wardenSeesPlayer(room, figMesh, lp) {
       const dx = lp.x - wardenState.lx, dd = lp.d - wardenState.ld, dist = Math.hypot(dx, dd);
@@ -4333,6 +4337,20 @@
       }
       // --- 들킨 채 옷장에 숨으면: 사서가 옷장 앞으로 와서 등불을 비춘다 → 책 제자리 꽂기 문제 시작
       if (hidden && wardenState.mode === 'chase' && activeClosetObj && dist < 16) startWardenHunt(curRoom);
+
+      // --- 적극적으로 찾아다니기: 순찰 중에도 일정 간격마다 플레이어가 있는 쪽 근처(정확한 자리는 아님)를 살피러 간다
+      if (wardenState.mode === 'patrol' && !hidden) {
+        wardenState.seekTimer -= dt;
+        if (wardenState.seekTimer <= 0) {
+          wardenState.seekTimer = wardenSeekEvery();
+          const fuzz = gameDifficulty === 'easy' ? 3.5 : (gameDifficulty === 'challenge' ? 1.5 : 2.5);
+          const a = Math.random() * Math.PI * 2, r = fuzz * (0.4 + 0.6 * Math.random());
+          const tx = Math.max(-lay.W / 2 + 0.6, Math.min(lay.W / 2 - 0.6, lp.x + Math.cos(a) * r));
+          const td = Math.max(1.0, Math.min(lay.L - 1.0, lp.d + Math.sin(a) * r));
+          wardenSetMode('investigate', { x: tx, d: td });
+          if (dist < 14) showSoundCue('🏮', '등불이 이쪽을 살피러 온다', cueSide(curRoom.centerX + wardenState.lx, curRoom.zStart - wardenState.ld));
+        }
+      }
 
       // --- 목표 지점
       let speed = 2.3;
@@ -4408,6 +4426,17 @@
         const diff = normalizeAngleDiff(want, cur) - cur;
         figMesh.rotation.y = cur + Math.sign(diff) * Math.min(Math.abs(diff), dt * 5);
       }
+
+      // --- 멈춰 선 채 진행이 없으면(목표가 가구 안이라 닿지 못하는 경우 등) 다음 행동으로 넘어간다. 둘러볼 때는 등불을 휘두른다
+      if (!moving && wardenState.mode !== 'hunt' && wardenState.mode !== 'chase') {
+        if (wardenState.mode === 'search') figMesh.rotation.y += dt * 1.8;
+        wardenState.idleT = (wardenState.idleT || 0) + dt;
+        if (wardenState.idleT > 1.2) {
+          wardenState.idleT = 0;
+          if (wardenState.mode === 'investigate') { wardenSetMode('search'); wardenState.target = null; wardenState.searchTimer = 2.5; }
+          else if (wardenState.mode === 'patrol' || wardenState.mode === 'calm') { wardenState.wpIndex = (wardenState.wpIndex + 1) % wardenState.waypoints.length; wardenState.path = null; }
+        }
+      } else wardenState.idleT = 0;
 
       // --- 발소리·팔다리
       const prevStep = wardenState.stepCycle;

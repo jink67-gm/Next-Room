@@ -177,6 +177,9 @@
       // 자주 쓰는 소리를 미리 디코딩 (괴물 경고·발소리는 처음 재생 때 늦지 않게)
       ['puzzle_correct', 'puzzle_wrong', 'keypad_press', 'gale_light_warning', 'echo_glitch_warning', 'closet_wood_open', 'closet_wood_close', 'player_hit_dizzy'].forEach(n => this._load('sfx/' + n));
       SURFACES.forEach(s => Object.keys(STEP_COUNT).forEach(m => { for (let i = 1; i <= STEP_COUNT[m]; i++) this._load('sfx/' + footstepFile(s, m, i)); }));
+      // V7: 나머지 효과음(괴물 등장 소리 포함, 모두 합쳐 약 1 MB)도 이어서 미리 디코딩.
+      // 처음 나오는 괴물 소리가 0.35초 안에 디코딩되지 못해 아예 안 들리던 문제(예: 속삭이 등장 '쉿' 소리) 방지
+      new Set(Object.values(EFFECTS)).forEach(n => this._load('sfx/' + n));
     }
 
     // ------------------------------------------------------------ BGM
