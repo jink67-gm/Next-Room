@@ -177,7 +177,8 @@
           const r = rng.next();
           const pr = SEASON === 3 ? 0.46 : (SEASON === 2 ? 0.42 : 0.40), pa = SEASON === 3 ? 0.76 : (SEASON === 2 ? 0.66 : 0.62);
           if (r < pr) e.gale = true;
-          else if (d >= 4 && r < pa) e.echo = true;
+          // V7: 메아리는 '방 불을 끄는' 괴물이라 원래 깜깜한 암실에서는 의미가 없다 → 암실에서는 같은 확률로 돌풍 (난수 사용은 그대로라 맵·문제는 바뀌지 않음)
+          else if (d >= 4 && r < pa) { if (a === 'darkRoom') e.gale = true; else e.echo = true; }
           if (e.gale || e.echo) lastDanger = d;
         }
         if (a === 'darkRoom') e.whisper = true;
@@ -190,7 +191,7 @@
         for (let d = 3; d <= N; d++) {
           const p = plan[d];
           if (!GALE_ARCHS.has(p.arch) || p.events.gale || p.events.echo) continue;
-          if (key === 'echo' && d < 4) continue;
+          if (key === 'echo' && (d < 4 || p.arch === 'darkRoom')) continue;
           const prev = plan[d - 1], next = plan[d + 1];
           if ((prev && (prev.events.gale || prev.events.echo)) || (next && (next.events.gale || next.events.echo))) continue;
           if (prev && HEAVY.includes(prev.arch)) continue;
