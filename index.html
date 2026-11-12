@@ -3560,7 +3560,7 @@
       return Math.abs(dot) < 1.2 ? 'all' : (dot > 0 ? 'right' : 'left');
     }
 
-    // 미로 방: 돌풍·메아리가 가운데 줄이 아니라 옷장 앞을 차례로 스치며 지나간다 (입구 → 옷장 앞들 → 출구, z에 따라 x를 이어 붙임).
+    // 미로 방: 돌풍이 가운데 줄이 아니라 옷장 앞을 차례로 스치며 지나간다 (입구 → 옷장 앞들 → 출구, z에 따라 x를 이어 붙임). 메아리는 플레이어 곁을 지나간다.
     // 피해 판정은 그대로 z 기준(방 전체)이라, 옷장 밖에 있으면 어느 통로에 있든 위험하다.
     function monsterRouteX(room, z) {
       if (!room || !room.layout || !room.layout.maze || !(room.closets || []).length) return room ? room.centerX : 0;
@@ -4101,7 +4101,9 @@
         if (echoState.listenLeft > 0 && dz < 1.5) { echoState.pauseTimer = echoState.listenLeft; echoState.listenLeft = 0; showSubtleSubtitle(['바로 곁에서 멈췄다… 숨도 쉬지 말자.'], 1); }
         else echoState.z += echoState.dir * echoState.speed * dt;
       }
-      echoState.x = monsterRouteX(curRoom, echoState.z);
+      // 메아리 때 플레이어는 옷장 밖에 있으므로, 옷장 앞이 아니라 플레이어 바로 곁(약 0.9 m 옆)을 스치며 지나간다
+      const wantX = dz < 10 ? player.x + (player.x >= curRoom.centerX ? -0.9 : 0.9) : curRoom.centerX;
+      echoState.x += (wantX - echoState.x) * Math.min(1, dt * 3);
       echoMonster3D.position.set(echoState.x, 1.7, echoState.z);
 
       if (!echoState.passSound && dz < 12) { echoState.passSound = true; playSfx('echoPass', 1.0); }
