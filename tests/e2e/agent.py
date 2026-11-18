@@ -12,6 +12,8 @@ async def stand_still_for_echo(g, log):
         if t.get('switches'):
             sw = min(t['switches'], key=lambda s: math.hypot(s['x'] - p['x'], s['d'] - p['d']))
             await g.walk_to(sw['x'], sw['d'], tol=0.8, timeout=10)
+            await g.ev(f"() => NextRoomDebug.lookAtLocal({sw['wx']}, {sw['wd']})")   # 스위치를 바라봐야 누를 수 있다
+            await g.pg.wait_for_timeout(200)
             await g.key('KeyE'); await g.pg.wait_for_timeout(300)
     st = await g.state()
     log(f"    🌀 echo → lights off={st['echo']['lightsOff']}, standing still")

@@ -89,7 +89,9 @@ async def echo_trial(g, pg, mode):
     st = await wait_for(g, pg, lambda s: s['echo']['warning'] or s['echo']['active'], n=400)
     record(f'echo[{mode}]: event starts in DOOR {n}', st is not None)
     if mode != 'light':
-        await g.key('KeyE'); await pg.wait_for_timeout(300)   # 스위치로 방 불 끄기
+        await g.ev(f"() => NextRoomDebug.lookAtLocal({sw['wx']}, {sw['wd']})")   # 스위치를 바라보고
+        await pg.wait_for_timeout(200)
+        await g.key('KeyE'); await pg.wait_for_timeout(300)   # 눌러서 방 불 끄기
     record(f'echo[{mode}]: switch turns the room lights off', (await g.state())['echo']['lightsOff'] == (mode != 'light'))
     if mode == 'closet':
         await walk_safe(g, c['x'], c['d'], g.log, tol=0.9); await g.key('KeyE')
