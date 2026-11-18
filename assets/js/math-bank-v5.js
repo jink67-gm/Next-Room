@@ -1,5 +1,5 @@
 /* NEXT ROOM V5 — 6학년 2학기 수학 문제은행 (매개변수형 생성기 + 검증)
- * 단원: ① 분수의 나눗셈 ② 소수의 나눗셈 ③ 공간과 입체 ④ 비례식과 비례배분 ⑤ 원의 둘레와 넓이 ⑥ 원기둥·원뿔·구
+ * 학습 내용: ① 분수÷분수 ② 소수÷소수 ③ 쌓기나무로 만든 입체 ④ 비례식과 비례배분 ⑤ 원주와 원의 넓이 ⑥ 원기둥·원뿔·구
  * - 모든 문항은 시드 기반으로 생성되어 같은 시드·같은 순서면 같은 문제가 나온다(체크포인트 복원용).
  * - 한 판 안에서 문제 ID(sig)와 숫자 구성(numSig)이 겹치지 않게 출제한다.
  * - 정답은 유리수(분자/분모)로 계산해 부동소수 오차가 없다.
@@ -9,9 +9,11 @@
   const Core = root.NextRoomCore || (typeof require !== 'undefined' ? require('./v5-core.js') : null);
   const makeRng = Core.makeRng;
 
+  // 학년-학기 표시 (6-2 단원은 예전 번호 1~6을 그대로 써서 저장된 체크포인트가 깨지지 않게 한다. 다른 학년은 math-bank-grades.js가 등록)
+  const UNIT_GRADE = { 1: '6-2', 2: '6-2', 3: '6-2', 4: '6-2', 5: '6-2', 6: '6-2' };
   const UNIT_NAMES = {
-    1: '1단원. 분수의 나눗셈', 2: '2단원. 소수의 나눗셈', 3: '3단원. 공간과 입체',
-    4: '4단원. 비례식과 비례배분', 5: '5단원. 원의 둘레와 넓이', 6: '6단원. 원기둥, 원뿔, 구'
+    1: '(분수) ÷ (분수)', 2: '(소수) ÷ (소수)', 3: '쌓기나무로 만든 입체',
+    4: '비의 성질, 비례식과 비례배분', 5: '원주율, 원주와 원의 넓이', 6: '원기둥, 원뿔, 구'
   };
 
   // ---------------------------------------------------------------- rational
@@ -39,7 +41,7 @@
   function fracStr(a) { return isInt(a) ? String(a.n) : a.n + '/' + a.d; }
   function mixedStr(a) { if (isInt(a) || a.n < a.d) return fracStr(a); const w = Math.floor(a.n / a.d), r = a.n - w * a.d; return r ? w + '과 ' + r + '/' + a.d : String(w); }
   // value display: decimals for unit 2/5, fractions elsewhere
-  function show(a, mode) { if (mode === 'dec' && terminates(a)) return decStr(a); return fracStr(a); }
+  function show(a, mode) { if (mode === 'dec' && terminates(a)) return decStr(a); if (mode === 'mixed') return mixedStr(a); return fracStr(a); }
   function parseNum(str) {
     if (str === null || str === undefined) return null;
     let s = String(str).replace(/\s+/g, '').replace(/,/g, '');
@@ -74,7 +76,7 @@
 
   // --------------------------------------------------------------- builders
   function base(unit, gen, params, extra) {
-    return Object.assign({ unit, unitName: UNIT_NAMES[unit], gen, params, sig: gen + ':' + JSON.stringify(params) }, extra);
+    return Object.assign({ unit, unitName: (UNIT_GRADE[unit] ? UNIT_GRADE[unit] + ' · ' : '') + UNIT_NAMES[unit], gen, params, sig: gen + ':' + JSON.stringify(params) }, extra);
   }
   function asNumeric(core, opts) {
     // core: {unit, gen, params, q, hint, ans (rational), mode, unitLabel, distract:[rationals], diagram}
@@ -553,7 +555,7 @@
       const c = coreFn(rng);
       if (!c) continue;
       const left = c.q.replace(/\s*=\s*□.*$/, '').replace(/ □.*$/, '');
-      const right = show(c.ans, c.mode) + (c.unitLabel && c.unitLabel !== '병' ? ' ' + c.unitLabel : '');
+      const right = show(c.ans, c.mode) + (c.unitLabel && c.unitLabel !== '병' ? (/^[°%℃]$/.test(c.unitLabel) ? '' : ' ') + c.unitLabel : '');
       if (seen.has(right) || lefts.has(left) || left.includes('□')) continue;
       seen.add(right); lefts.add(left);
       items.push({ left, right, p: c.params });
@@ -836,10 +838,37 @@
     }
     const unit = this.units[0];
     for (let t = 0; t < 50; t++) { const d = makeDefense(unit, rng); if (d) return { id: 'def_fb', unit, q: '[' + UNIT_NAMES[unit].replace(/^\d단원\. /, '') + '] ' + d.q, choices: d.choices, a: d.a, diagram: null }; }
-    return { id: 'def_fallback', unit: 1, q: '[분수의 나눗셈] 6 ÷ 3/4 = □', choices: ['6', '8', '9'], a: '8' };
+    return { id: 'def_fallback', unit: 1, q: '[(분수) ÷ (분수)] 6 ÷ 3/4 = □', choices: ['6', '8', '9'], a: '8' };
   };
   // 테스트용 노출
   Deck.makeDefense = makeDefense;
+
+  // ----------------------------------------------------------------- 다른 학년 단원 등록 (math-bank-grades.js)
+  // def: { grade:'4-1', name:'큰 수 (만·억·조)', core(rng, variant) → 숫자 답 core | null, variants: 변형 수, expr: 식 모양(…= □) 변형 번호 목록, hint }
+  function registerUnit(id, def) {
+    UNIT_NAMES[id] = def.name; UNIT_GRADE[id] = def.grade;
+    const anyCore = r => { for (let t = 0; t < 12; t++) { const c = def.core(r, r.int(0, def.variants - 1)); if (c) return c; } return null; };
+    const exprCore = r => { for (let t = 0; t < 12; t++) { const c = def.core(r, r.pick(def.expr)); if (c) return c; } return null; };
+    const tt = { F: anyCore, E: anyCore };
+    if (def.expr && def.expr.length) {
+      tt.A = r => numericMatch(id, 'u' + id + '_match', r, exprCore, '식(문제)과 답을 연결하세요.', def.hint);
+      const cList = def.cexpr || def.expr;   // 카드 배치는 '식 = □' 모양만 (수열처럼 = 이 없는 문제는 제외)
+      const cCore = r => { for (let t = 0; t < 12; t++) { const c = def.core(r, r.pick(cList)); if (c) return c; } return null; };
+      if (cList.length) tt.C = r => cardsFromCores(id, 'u' + id + '_cards', r, cCore, '두 문제의 답을 카드에서 골라 배치하세요.', def.hint);
+    }
+    TYPE_TABLE[id] = tt; CORE[id] = anyCore;
+    // 옷장 걸쇠·책 꽂기 문제: 같은 생성기에서 짧은 문제만 골라 보기 3개로
+    DEF[id] = [rng => {
+      const c = anyCore(rng);
+      if (!c || c.q.length > 46 || c.diagram) return null;
+      const ch = numChoices(rng, c.ans, c.distract || [], c.mode);
+      const a = show(c.ans, c.mode);
+      const w = ch.filter(x => x !== a);
+      if (w.length !== 2) return null;
+      return { q: c.q, a, w };
+    }];
+  }
+  const util = { R, rAdd, rSub, rMul, rDiv, rEq, gcd, isInt, terminates, decStr, fracStr, mixedStr, show, D };
   function hashSig(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
 
   // ----------------------------------------------------------------- diagrams (SVG strings)
@@ -991,7 +1020,7 @@
   }
 
   const api = {
-    UNIT_NAMES, R, parseNum, rEq, show, fracStr, decStr, mixedStr, checkTyped, validateProblem, generate, Deck, renderDiagram,
+    UNIT_NAMES, UNIT_GRADE, registerUnit, util, R, parseNum, rEq, show, fracStr, decStr, mixedStr, checkTyped, validateProblem, generate, Deck, renderDiagram,
     frontView, sideView, countSolutions, minMaxCount, TYPE_TABLE, TYPE_CODE, KIND_TYPES
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

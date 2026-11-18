@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>NEXT ROOM : 6학년 2학기 3D 방탈출</title>
+  <title>NEXT ROOM : 4~6학년 수학 3D 방탈출</title>
   <!-- V5: Tailwind는 미리 빌드한 CSS, Three.js r128은 저장소 안의 파일을 먼저 사용 (CDN이 막힌 학교망에서도 실행) -->
-  <link rel="stylesheet" href="assets/css/tailwind.css?v=9">
+  <link rel="stylesheet" href="assets/css/tailwind.css?v=10">
   <script src="assets/vendor/three.min.js"></script>
   <script>if(!window.THREE){document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');}</script>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Pretendard:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -276,13 +276,13 @@
 
     <div class="my-auto py-3 flex flex-col items-center max-w-3xl w-full mx-auto text-center">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-bold mb-2">
-        🕯️ 6학년 2학기 수학 인터랙티브 3D 스릴러 방탈출
+        🕯️ 4~6학년 수학 인터랙티브 3D 스릴러 방탈출
       </div>
       <h1 class="title-font text-4xl sm:text-6xl tracking-widest text-white drop-shadow-[0_0_25px_rgba(220,38,38,0.85)]">
         NEXT ROOM V5
       </h1>
       <p class="text-slate-300 text-xs sm:text-sm mt-1 mb-4 max-w-lg">
-        어두운 호텔과 도서관을 탐험하며 서랍에서 열쇠와 배터리를 찾고, 6학년 2학기 수학 장치를 작동해 7종의 괴물들로부터 탈출하세요!
+        어두운 호텔과 도서관을 탐험하며 서랍에서 열쇠와 배터리를 찾고, 4~6학년 수학 장치를 작동해 7종의 괴물들로부터 탈출하세요!
       </p>
 
       <div class="w-full bg-[#161220]/95 border-2 border-amber-500/40 rounded-2xl p-4 sm:p-5 shadow-2xl text-left space-y-4">
@@ -332,35 +332,19 @@
 
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <label class="text-amber-400 font-extrabold text-xs sm:text-sm">📚 3. 출제 단원 선택 (6학년 2학기 전 단원)</label>
-            <button onclick="toggleAllUnits()" class="text-xs text-sky-400 hover:underline font-semibold">전체 선택/해제</button>
+            <label class="text-amber-400 font-extrabold text-xs sm:text-sm">📚 3. 출제 내용 선택 (4~6학년 1·2학기)</label>
+            <span id="unit-count" class="text-[11px] text-slate-400">6개 선택</span>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs">
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900/90 border border-slate-700 cursor-pointer hover:border-amber-500/50">
-              <input type="checkbox" class="unit-chk w-4 h-4 accent-amber-500 rounded" value="1" checked>
-              <span class="font-semibold">1. 분수의 나눗셈</span>
-            </label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900/90 border border-slate-700 cursor-pointer hover:border-amber-500/50">
-              <input type="checkbox" class="unit-chk w-4 h-4 accent-amber-500 rounded" value="2" checked>
-              <span class="font-semibold">2. 소수의 나눗셈</span>
-            </label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900/90 border border-slate-700 cursor-pointer hover:border-amber-500/50">
-              <input type="checkbox" class="unit-chk w-4 h-4 accent-amber-500 rounded" value="3" checked>
-              <span class="font-semibold">3. 공간과 입체</span>
-            </label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900/90 border border-slate-700 cursor-pointer hover:border-amber-500/50">
-              <input type="checkbox" class="unit-chk w-4 h-4 accent-amber-500 rounded" value="4" checked>
-              <span class="font-semibold">4. 비례식과 비례배분</span>
-            </label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900/90 border border-slate-700 cursor-pointer hover:border-amber-500/50">
-              <input type="checkbox" class="unit-chk w-4 h-4 accent-amber-500 rounded" value="5" checked>
-              <span class="font-semibold">5. 원의 둘레와 넓이</span>
-            </label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900/90 border border-slate-700 cursor-pointer hover:border-amber-500/50">
-              <input type="checkbox" class="unit-chk w-4 h-4 accent-amber-500 rounded" value="6" checked>
-              <span class="font-semibold">6. 원기둥, 원뿔, 구</span>
-            </label>
+          <!-- 학년-학기 탭: 다른 학기의 단원도 함께 고를 수 있다 (체크 상태는 탭을 바꿔도 유지) -->
+          <div id="sem-tabs" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-bottom:6px"></div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span id="sem-title" class="text-[11px] text-slate-400"></span>
+            <span class="flex gap-3">
+              <button onclick="toggleAllUnits()" class="text-xs text-sky-400 hover:underline font-semibold">이 학기 전체 선택/해제</button>
+              <button onclick="clearAllUnits()" class="text-xs text-slate-400 hover:underline font-semibold">모두 해제</button>
+            </span>
           </div>
+          <div id="unit-grid" class="text-xs"></div>
         </div>
 
         <div id="save-panel" class="hidden flex-col sm:flex-row gap-2 items-stretch bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-2.5">
@@ -467,7 +451,7 @@
       <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
         <div class="flex items-center gap-2 flex-wrap">
           <span id="modal-unit-tag" class="bg-teal-950 text-teal-300 border border-teal-500/40 px-2.5 py-0.5 rounded-md text-xs font-extrabold">
-            1단원. 분수의 나눗셈
+            (분수) ÷ (분수)
           </span>
           <span id="modal-type-tag" class="bg-amber-500/20 text-amber-300 border border-amber-400/40 px-2.5 py-0.5 rounded-md text-xs font-bold">
             유형 A · 선 잇기 퍼즐
@@ -602,11 +586,12 @@
     </div>
   </div>
 
-  <script src="assets/js/audio-manager.js?v=9"></script>
-  <script src="assets/js/procedural-props.js?v=9"></script>
-  <script src="assets/js/monster-models-v2.js?v=9"></script>
-  <script src="assets/js/v5-core.js?v=9"></script>
-  <script src="assets/js/math-bank-v5.js?v=9"></script>
+  <script src="assets/js/audio-manager.js?v=10"></script>
+  <script src="assets/js/procedural-props.js?v=10"></script>
+  <script src="assets/js/monster-models-v2.js?v=10"></script>
+  <script src="assets/js/v5-core.js?v=10"></script>
+  <script src="assets/js/math-bank-v5.js?v=10"></script>
+  <script src="assets/js/math-bank-grades.js?v=10"></script>
   <script>
     function toggleGuide(show) {
       const m = document.getElementById('guide-modal');
@@ -694,10 +679,65 @@
       });
     }
 
+    // ---- 출제 단원 선택: 4-1 ~ 6-2 학기 탭 + 단원 체크박스 (단원 목록은 문제은행에서 가져온다)
+    let currentSem = '6-2';
+    function semGroups() { return (window.NextRoomBank && NextRoomBank.GRADE_GROUPS) || [['6-2', [1, 2, 3, 4, 5, 6]]]; }
+    function buildUnitPicker(initialUnits) {
+      const grid = document.getElementById('unit-grid'), tabs = document.getElementById('sem-tabs');
+      if (!grid || !tabs) return;
+      const want = new Set(initialUnits || selectedUnits);
+      grid.innerHTML = ''; tabs.innerHTML = '';
+      semGroups().forEach(([sem, ids]) => {
+        const tb = document.createElement('button');
+        tb.id = 'sem-tab-' + sem; tb.onclick = () => showSemester(sem);
+        tb.innerHTML = `<span class="text-sm font-black">${sem}</span><span id="sem-cnt-${sem}" class="text-[10px] text-slate-400"></span>`;
+        tabs.appendChild(tb);
+        const box = document.createElement('div');
+        box.id = 'sem-units-' + sem; box.className = 'grid grid-cols-2 sm:grid-cols-3 gap-1.5';
+        ids.forEach(id => {
+          const name = (NextRoomBank.UNIT_NAMES[id] || '').replace(/^(\d)단원\. /, '$1. ');
+          const lb = document.createElement('label');
+          lb.className = 'flex items-center gap-2 p-2 rounded-xl bg-slate-900/90 border border-slate-700 cursor-pointer hover:border-amber-500/50';
+          lb.innerHTML = `<input type="checkbox" class="unit-chk w-4 h-4 accent-amber-500 rounded" value="${id}" ${want.has(id) ? 'checked' : ''}><span class="font-semibold">${name}</span>`;
+          lb.querySelector('input').onchange = updateUnitCount;
+          box.appendChild(lb);
+        });
+        grid.appendChild(box);
+      });
+      const firstSem = semGroups().find(([, ids]) => ids.some(id => want.has(id)));
+      showSemester(firstSem ? firstSem[0] : '6-2');
+    }
+    function showSemester(sem) {
+      currentSem = sem;
+      semGroups().forEach(([s2]) => {
+        const box = document.getElementById('sem-units-' + s2), tb = document.getElementById('sem-tab-' + s2);
+        if (box) box.classList.toggle('hidden', s2 !== sem);
+        if (tb) tb.className = 'diff-opt py-2 px-1 rounded-xl border-2 font-bold text-xs transition flex flex-col items-center ' + (s2 === sem ? 'border-amber-400 bg-amber-500/20 text-white' : 'border-slate-700 bg-slate-900/70 text-slate-300');
+      });
+      const [g, t] = sem.split('-');
+      document.getElementById('sem-title').innerText = `${g}학년 ${t}학기 학습 내용`;
+      updateUnitCount();
+    }
+    function updateUnitCount() {
+      const chosen = Array.from(document.querySelectorAll('.unit-chk:checked')).map(c => parseInt(c.value));
+      semGroups().forEach(([sem, ids]) => {
+        const n = ids.filter(id => chosen.includes(id)).length, el = document.getElementById('sem-cnt-' + sem);
+        if (el) { el.innerText = n ? n + '개' : '·'; el.className = 'text-[10px] ' + (n ? 'text-amber-300' : 'text-slate-500'); }
+      });
+      const el = document.getElementById('unit-count');
+      if (el) el.innerText = chosen.length ? `${chosen.length}개 선택` : '학습 내용을 골라 주세요';
+      try { localStorage.setItem('nextRoomUnits', JSON.stringify(chosen)); } catch (_) { /* 저장 불가: 무시 */ }
+    }
+    // 지금 보고 있는 학기의 단원을 모두 선택/해제
     function toggleAllUnits() {
-      const chks = document.querySelectorAll('.unit-chk');
+      const chks = document.querySelectorAll('#sem-units-' + currentSem + ' .unit-chk');
       const allChecked = Array.from(chks).every(c => c.checked);
       chks.forEach(c => c.checked = !allChecked);
+      updateUnitCount();
+    }
+    function clearAllUnits() {
+      document.querySelectorAll('.unit-chk').forEach(c => { c.checked = false; });
+      updateUnitCount();
     }
 
     // 안내 UI 겹침 방지 및 하단 간접 분위기 자막 제어
@@ -5968,12 +6008,12 @@
         maxDoors = restore.maxDoors;
         selectDifficulty(restore.difficulty);
         selectStageCount(restore.maxDoors);
-        document.querySelectorAll('.unit-chk').forEach(c => { c.checked = selectedUnits.includes(parseInt(c.value)); });
+        buildUnitPicker(selectedUnits);
       } else {
         const chks = document.querySelectorAll('.unit-chk:checked');
         selectedUnits = Array.from(chks).map(c => parseInt(c.value));
         if (selectedUnits.length === 0) {
-          showToast("최소 1개 이상의 출제 단원을 선택해 주세요!");
+          showToast("최소 1개 이상의 출제 내용을 선택해 주세요!");
           return;
         }
         if (!diffUnlocked(gameDifficulty)) { selectDifficulty(gameDifficulty); refreshDifficultyLocks(); return; }
@@ -6092,7 +6132,7 @@
         const d = res.data;
         const diffName = { easy: '쉬움', normal: '보통', challenge: '도전' }[d.difficulty];
         const when = new Date(d.savedAt || Date.now());
-        document.getElementById('save-info').innerText = `DOOR ${String(d.door).padStart(2, '0')} / ${d.maxDoors} · ${diffName} · ${d.units.join('·')}단원 · ❤️${d.hearts} · ${when.getMonth() + 1}/${when.getDate()} ${String(when.getHours()).padStart(2, '0')}:${String(when.getMinutes()).padStart(2, '0')}`;
+        document.getElementById('save-info').innerText = `DOOR ${String(d.door).padStart(2, '0')} / ${d.maxDoors} · ${diffName} · ${[...new Set(d.units.map(u => NextRoomBank.UNIT_GRADE[u] || '?'))].join('·')} ${d.units.length}개 내용 · ❤️${d.hearts} · ${when.getMonth() + 1}/${when.getDate()} ${String(when.getHours()).padStart(2, '0')}:${String(when.getMinutes()).padStart(2, '0')}`;
         panel.classList.remove('hidden'); panel.classList.add('flex');
       } else {
         panel.classList.add('hidden'); panel.classList.remove('flex');
@@ -6390,6 +6430,9 @@
     };
 
     window.onload = function () {
+      // 지난번에 고른 단원을 기억 (없으면 6학년 2학기 전 단원)
+      try { const saved = JSON.parse(localStorage.getItem('nextRoomUnits') || 'null'); if (Array.isArray(saved) && saved.length && saved.every(id => NextRoomBank.UNIT_NAMES[id])) selectedUnits = saved; } catch (_) { /* 저장소 없음 */ }
+      buildUnitPicker(selectedUnits);
       initThreeJS();
       try { const ms = document.getElementById('mouse-sens'); if (ms) { ms.value = Math.round(mouseSens * 100); document.getElementById('mouse-sens-value').innerText = Math.round(mouseSens * 100) + '%'; } } catch (_) { /* */ }
     };
