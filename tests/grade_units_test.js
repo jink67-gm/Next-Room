@@ -119,6 +119,11 @@ if (ids.length !== 30) fail('expected 30 new units, got ' + ids.length);
 for (const id of ids) {
   const u = G.units[id];
   if (!B.UNIT_NAMES[id] || !B.UNIT_GRADE[id]) fail(id + ' not registered');
+  const wantGrade = Math.floor(id / 100) + '-' + Math.floor(id / 10) % 10;
+  if (B.UNIT_GRADE[id] !== wantGrade) fail(`${id} grade label ${JSON.stringify(B.UNIT_GRADE[id])}, expected ${wantGrade}`);
+  if (/[ -]/.test(B.UNIT_NAMES[id] + B.UNIT_GRADE[id])) fail(id + ' control character in name');
+  const shownTag = B.generate(id, 'F', C.makeRng('tag', id)) ;
+  if (shownTag && !shownTag.unitName.startsWith(wantGrade + ' · ')) fail(`${id} puzzle tag ${JSON.stringify(shownTag.unitName)}`);
   for (const code of ['A', 'C', 'E', 'F']) {
     if (!B.TYPE_TABLE[id][code]) continue;
     let ok = 0;
