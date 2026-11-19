@@ -860,7 +860,7 @@
     // 옷장 걸쇠·책 꽂기 문제: 같은 생성기에서 짧은 문제만 골라 보기 3개로
     DEF[id] = [rng => {
       const c = anyCore(rng);
-      if (!c || c.q.length > 46 || c.diagram) return null;
+      if (!c || c.q.length > 46) return null;
       const ch = numChoices(rng, c.ans, c.distract || [], c.mode);
       const a = show(c.ans, c.mode);
       const w = ch.filter(x => x !== a);
@@ -1003,8 +1003,12 @@
       <line x1="248" y1="25" x2="248" y2="100" stroke="#f472b6" stroke-width="2"/>
       ${svgFracLabel(284, 66, '세로 ', spec.side, ' m', '#f472b6', 12)}</svg>`;
   }
+  // 다른 학년 그림(그래프·도형 등)은 math-bank-grades.js가 registerDiagram으로 등록
+  const EXTRA_DIAGRAMS = {};
+  function registerDiagram(kind, fn) { EXTRA_DIAGRAMS[kind] = fn; }
   function renderDiagram(spec) {
     if (!spec) return '';
+    if (EXTRA_DIAGRAMS[spec.kind]) { try { return EXTRA_DIAGRAMS[spec.kind](spec); } catch (_) { return ''; } }
     switch (spec.kind) {
       case 'topNumbers': return svgTopNumbers(spec.grid, spec.arrow);
       case 'voxelTarget': return svgVoxelTarget(spec.footprint, spec.front, spec.side, spec.total);
@@ -1020,7 +1024,7 @@
   }
 
   const api = {
-    UNIT_NAMES, UNIT_GRADE, registerUnit, util, R, parseNum, rEq, show, fracStr, decStr, mixedStr, checkTyped, validateProblem, generate, Deck, renderDiagram,
+    UNIT_NAMES, UNIT_GRADE, registerUnit, registerDiagram, util, R, parseNum, rEq, show, fracStr, decStr, mixedStr, checkTyped, validateProblem, generate, Deck, renderDiagram,
     frontView, sideView, countSolutions, minMaxCount, TYPE_TABLE, TYPE_CODE, KIND_TYPES
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

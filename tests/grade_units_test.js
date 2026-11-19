@@ -14,7 +14,7 @@ global.NextRoomCore = C;
 const B = require(path.join(__dirname, '..', 'assets', 'js', 'math-bank-v5.js'));
 global.NextRoomBank = B;
 const G = require(path.join(__dirname, '..', 'assets', 'js', 'math-bank-grades.js'));
-let failures = 0, checked = 0, exprChecked = 0, wordChecked = 0;
+let failures = 0, checked = 0, exprChecked = 0, wordChecked = 0, figChecked = 0;
 const KINDS = {};
 const fail = m => { failures++; const k = m.split(' ').slice(0, 2).join(' '); KINDS[k] = (KINDS[k] || 0) + 1; if (KINDS[k] <= 2) console.log('FAIL', m); };
 
@@ -155,6 +155,11 @@ for (const id of ids) {
         const want = W[c.gen](c.params);
         if (!eq(want, ans)) fail(`${c.gen} params ${JSON.stringify(c.params)} → ${want.join('/')} but generator says ${ans.join('/')} :: ${c.q}`);
       } else fail(`${c.gen} has no independent check`);
+      if (c.diagram) {   // 그림: 그려지는지, 깨진 값(NaN 등)이 없는지
+        figChecked++;
+        const svg = B.renderDiagram(c.diagram);
+        if (!svg || !svg.startsWith('<svg') || /NaN|undefined|Infinity/.test(svg)) fail(`${c.gen} broken figure ${JSON.stringify(c.diagram).slice(0, 80)}`);
+      }
       const shown = B.util.show(c.ans, c.mode);
       if (!B.checkTyped(c.ans, shown)) fail(`${c.gen} displayed answer ${shown} does not parse back`);
     }
@@ -186,6 +191,7 @@ for (const units of SETS) for (let seed = 1; seed <= 12; seed++) {
   decks++;
 }
 
-console.log(`checked ${checked} generated questions (${exprChecked} expressions recomputed, ${wordChecked} word problems recomputed), ${decks} decks × 120 draws`);
+console.log(`checked ${checked} generated questions (${exprChecked} expressions recomputed, ${wordChecked} word problems recomputed, ${figChecked} figures drawn), ${decks} decks × 120 draws`);
+if (figChecked < 10000) fail('too few figures: ' + figChecked);
 if (failures) { console.log('FAILED', failures, JSON.stringify(KINDS)); process.exit(1); }
 console.log('PASS: 30 new units (4-1 ~ 6-1) — structure, independent answers, particles, decks');

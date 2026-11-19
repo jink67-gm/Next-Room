@@ -348,6 +348,341 @@
     return mk(u, 'height', [a, b, h], `부피가 ${a * b * h} cm³, 가로 ${a} cm, 세로 ${b} cm인 직육면체의 높이는 □입니다.`, '부피 ÷ (가로 × 세로)', N(h), [N(a * b), N(a * b * h / a), N(h + 1)], unitL('cm'));
   });
 
+  // =========================================================== 그림 (SVG) — 문제 글만으로도 풀 수 있고, 그림은 이해를 돕는다
+  const C_LINE = '#38bdf8', C_ACC = '#fbbf24', C_TXT = '#e2e8f0', C_DIM = '#94a3b8', C_FILL = '#1e293b', C_Q = '#f472b6';
+  const svgWrap = (w, h, body) => `<svg viewBox="0 0 ${w} ${h}" class="w-full max-w-[310px] h-auto" font-family="sans-serif">${body}</svg>`;
+  const tx = (x, y, s, fill, fs, anchor, wt) => `<text x="${(+x).toFixed(1)}" y="${(+y).toFixed(1)}" fill="${fill || C_TXT}" font-size="${fs || 12}" font-weight="${wt || 'bold'}" text-anchor="${anchor || 'middle'}">${s}</text>`;
+  const ln = (x1, y1, x2, y2, st, sw, dash) => `<line x1="${(+x1).toFixed(1)}" y1="${(+y1).toFixed(1)}" x2="${(+x2).toFixed(1)}" y2="${(+y2).toFixed(1)}" stroke="${st || C_LINE}" stroke-width="${sw || 2}"${dash ? ' stroke-dasharray="4 3"' : ''}/>`;
+  const pg = (pts, st, fill, sw, dash) => `<polygon points="${pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}" fill="${fill || C_FILL}" stroke="${st || C_LINE}" stroke-width="${sw || 2.5}" stroke-linejoin="round"${dash ? ' stroke-dasharray="4 3"' : ''}/>`;
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  // 꼭짓점 p의 안쪽(무게중심 쪽)으로 d만큼 들어간 자리 (각도 글자 위치)
+  const inward = (p, cen, d) => { const vx = cen[0] - p[0], vy = cen[1] - p[1], l = Math.hypot(vx, vy) || 1; return [p[0] + vx / l * d, p[1] + vy / l * d + 4]; };
+  // 변 a-b의 바깥쪽에 글자 (cen 반대쪽)
+  const outside = (a, b, cen, d) => { const m = mid(a, b), vx = m[0] - cen[0], vy = m[1] - cen[1], l = Math.hypot(vx, vy) || 1; return [m[0] + vx / l * d, m[1] + vy / l * d + 4]; };
+  const DG = {};
+
+  // 막대그래프: bars [{name, v(값, null이면 '?' 자리), label}], k(눈금 한 칸), unit
+  DG.g_bar = sp => {
+    const vals = sp.bars.map(b => b.v || 0), maxV = Math.max(...vals, sp.k), cells = Math.ceil(maxV / sp.k) + 1;
+    const x0 = 46, x1 = 290, y0 = 118, y1 = 20, ch = (y0 - y1) / cells;
+    let b = tx(14, 12, '(' + sp.unit + ')', C_DIM, 10, 'start', 'normal');
+    for (let i = 0; i <= cells; i++) {
+      const y = y0 - i * ch;
+      b += ln(x0, y, x1, y, i ? '#334155' : C_DIM, i ? 1 : 2);
+      if (cells <= 12 || i % 2 === 0) b += tx(x0 - 6, y + 4, i * sp.k, C_DIM, 10, 'end', 'normal');
+    }
+    const n = sp.bars.length, slot = (x1 - x0) / n, bw = Math.min(34, slot * 0.55);
+    sp.bars.forEach((br, i) => {
+      const cx = x0 + slot * (i + 0.5);
+      if (br.v === null) b += `<rect x="${cx - bw / 2}" y="${y0 - 2 * ch}" width="${bw}" height="${2 * ch}" fill="none" stroke="${C_Q}" stroke-dasharray="4 3" stroke-width="2"/>` + tx(cx, y0 - ch + 4, '?', C_Q, 14);
+      else { const h = br.v / sp.k * ch; b += `<rect x="${cx - bw / 2}" y="${(y0 - h).toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" fill="${br.hi ? C_ACC : C_LINE}" opacity="0.85"/>`; if (br.label) b += tx(cx, y0 - h - 5, br.label, br.label === '?' ? C_Q : C_ACC, 12); }
+      b += tx(cx, y0 + 15, br.name, C_TXT, 11);
+    });
+    return svgWrap(300, 140, b);
+  };
+
+  // 꺾은선그래프: xs 이름, ys 값(null이면 그 자리 '?'), base(아래 끝 값), step(한 칸), unit, labels(점 위 글자)
+  DG.g_line = sp => {
+    const rows = Math.round((Math.max(...sp.ys.filter(v => v !== null)) - sp.base) / sp.step) + 1;
+    const x0 = 52, x1 = 290, y0 = 116, y1 = 18, ch = (y0 - y1) / rows, n = sp.xs.length, slot = (x1 - x0) / n;
+    const Y = v => y0 - (v - sp.base) / sp.step * ch;
+    let b = tx(14, 12, '(' + sp.unit + ')', C_DIM, 10, 'start', 'normal');
+    for (let i = 0; i <= rows; i++) { const y = y0 - i * ch; b += ln(x0, y, x1, y, i ? '#334155' : C_DIM, i ? 1 : 2); if (rows <= 12 || i % 2 === 0) b += tx(x0 - 6, y + 4, B2(sp.base + i * sp.step), C_DIM, 10, 'end', 'normal'); }
+    if (sp.base > 0) b += `<path d="M${x0 - 4},${y0 - 3} l4,-3 l4,3 l4,-3" stroke="${C_DIM}" fill="none"/>`;   // 물결선(아래 생략)
+    const pts = sp.xs.map((_, i) => [x0 + slot * (i + 0.5), sp.ys[i] === null ? null : Y(sp.ys[i])]);
+    for (let i = 1; i < n; i++) if (pts[i - 1][1] !== null && pts[i][1] !== null) b += ln(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], C_ACC, 2.5);
+    pts.forEach((p, i) => {
+      b += tx(p[0], y0 + 15, sp.xs[i], C_TXT, 11);
+      if (p[1] === null) b += tx(p[0], y0 - ch * rows / 2, '?', C_Q, 16);
+      else { b += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="${C_ACC}"/>`; if (sp.labels && sp.labels[i]) b += tx(p[0], p[1] - 8, sp.labels[i], C_ACC, 11); }
+    });
+    return svgWrap(300, 138, b);
+  };
+  const B2 = v => String(Math.round(v * 100) / 100);
+
+  // 띠그래프: segs [{name, pct, txt}], total(띠 아래 글자)
+  const SEG_COL = ['#38bdf8', '#fbbf24', '#a78bfa', '#34d399', '#fb7185', '#94a3b8'];
+  DG.g_band = sp => {
+    const x0 = 15, x1 = 285, y = 40, h = 40; let x = x0, b = '';
+    sp.segs.forEach((sg, i) => { const w = (x1 - x0) * sg.pct / 100; b += `<rect x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${h}" fill="${SEG_COL[i % 6]}" opacity="${sg.hi ? 1 : 0.55}" stroke="#0f172a"/>`; b += tx(x + w / 2, y - 8, sg.name, C_TXT, 11); if (sg.txt) b += tx(x + w / 2, y + h / 2 + 5, sg.txt, '#0f172a', 12); x += w; });
+    b += tx(150, 104, sp.total || '', C_DIM, 11, 'middle', 'normal');
+    return svgWrap(300, 115, b);
+  };
+  // 원그래프: segs [{name, pct, txt}]
+  DG.g_pie = sp => {
+    const cx = 95, cy = 70, r = 58; let a0 = -Math.PI / 2, b = '', leg = '';
+    sp.segs.forEach((sg, i) => {
+      const a1 = a0 + sg.pct / 100 * Math.PI * 2, large = sg.pct > 50 ? 1 : 0;
+      b += `<path d="M${cx},${cy} L${(cx + r * Math.cos(a0)).toFixed(1)},${(cy + r * Math.sin(a0)).toFixed(1)} A${r},${r} 0 ${large} 1 ${(cx + r * Math.cos(a1)).toFixed(1)},${(cy + r * Math.sin(a1)).toFixed(1)} Z" fill="${SEG_COL[i % 6]}" opacity="${sg.hi ? 1 : 0.55}" stroke="#0f172a"/>`;
+      const am = (a0 + a1) / 2; if (sg.txt) b += tx(cx + r * 0.6 * Math.cos(am), cy + r * 0.6 * Math.sin(am) + 4, sg.txt, '#0f172a', 11);
+      leg += `<rect x="178" y="${22 + i * 20}" width="12" height="12" fill="${SEG_COL[i % 6]}" opacity="${sg.hi ? 1 : 0.55}"/>` + tx(196, 32 + i * 20, sg.name, C_TXT, 11, 'start');
+      a0 = a1;
+    });
+    return svgWrap(300, 140, b + leg);
+  };
+  // 그림그래프: 큰 그림 a개, 작은 그림 b개
+  DG.g_pict = sp => {
+    let b = `<circle cx="22" cy="20" r="9" fill="${C_ACC}"/>` + tx(36, 24, '= 10만 명', C_TXT, 11, 'start') + `<circle cx="130" cy="20" r="5" fill="${C_LINE}"/>` + tx(140, 24, '= 1만 명', C_TXT, 11, 'start');
+    let x = 22;
+    for (let i = 0; i < sp.a; i++) { b += `<circle cx="${x}" cy="62" r="11" fill="${C_ACC}"/>`; x += 26; }
+    for (let i = 0; i < sp.b; i++) { b += `<circle cx="${x}" cy="66" r="6" fill="${C_LINE}"/>`; x += 15; }
+    b += tx(150, 98, '어느 도시의 인구', C_DIM, 11, 'middle', 'normal');
+    return svgWrap(300, 108, b);
+  };
+
+  // 시계: h시 정각, 두 바늘 사이 각에 '?'
+  DG.g_clock = sp => {
+    const cx = 150, cy = 70, r = 56; let b = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${C_FILL}" stroke="${C_LINE}" stroke-width="3"/>`;
+    for (let i = 1; i <= 12; i++) { const a = i / 12 * Math.PI * 2 - Math.PI / 2; b += tx(cx + (r - 13) * Math.cos(a), cy + (r - 13) * Math.sin(a) + 4, i, C_TXT, 11); }
+    const ah = sp.h / 12 * Math.PI * 2 - Math.PI / 2;
+    b += ln(cx, cy, cx, cy - r + 8, C_TXT, 2.5) + ln(cx, cy, cx + (r - 22) * Math.cos(ah), cy + (r - 22) * Math.sin(ah), C_ACC, 4);
+    const am = (-Math.PI / 2 + ah) / 2;
+    b += `<path d="M${cx},${cy - 18} A18,18 0 0 1 ${(cx + 18 * Math.cos(ah)).toFixed(1)},${(cy + 18 * Math.sin(ah)).toFixed(1)}" fill="none" stroke="${C_Q}" stroke-width="2"/>`;
+    b += tx(cx + 30 * Math.cos(am), cy + 30 * Math.sin(am) + 4, '?', C_Q, 13) + `<circle cx="${cx}" cy="${cy}" r="3" fill="${C_TXT}"/>`;
+    return svgWrap(300, 140, b);
+  };
+
+  // 삼각형: 밑각 A(왼쪽), B(오른쪽) 크기로 그림, 각·변 글자 (angles: [왼쪽, 오른쪽, 위], sides: [밑변, 왼쪽 변, 오른쪽 변])
+  function triPts(A, Bg) {
+    const a = A * Math.PI / 180, bb = Bg * Math.PI / 180, base = 200;
+    const px = base * Math.tan(bb) / (Math.tan(a) + Math.tan(bb)), py = px * Math.tan(a);
+    const s = Math.min(1, 100 / py), w = base * s;
+    const L0 = [150 - w / 2, 120], R0 = [150 + w / 2, 120], T0 = [150 - w / 2 + px * s, 120 - py * s];
+    return [L0, R0, T0];
+  }
+  DG.g_tri = sp => {
+    const [P, Q, T] = triPts(sp.A, sp.B), cen = [(P[0] + Q[0] + T[0]) / 3, (P[1] + Q[1] + T[1]) / 3];
+    let b = pg([P, Q, T]);
+    const ang = sp.angles || [], sd = sp.sides || [];
+    [[P, ang[0]], [Q, ang[1]], [T, ang[2]]].forEach(([v, s]) => { if (s) { const p = inward(v, cen, 24); b += tx(p[0], p[1], s, s.includes('?') ? C_Q : C_ACC, 12); } });
+    [[P, Q, sd[0]], [P, T, sd[1]], [Q, T, sd[2]]].forEach(([u, v, s]) => { if (s) { const p = outside(u, v, cen, 14); b += tx(p[0], p[1], s, s.includes('?') ? C_Q : C_LINE, 12); } });
+    if (sp.ticks) [[P, T], [Q, T]].concat(sp.ticks === 3 ? [[P, Q]] : []).forEach(([u, v]) => { const m = mid(u, v); b += `<circle cx="${m[0].toFixed(1)}" cy="${m[1].toFixed(1)}" r="2.5" fill="${C_ACC}"/>`; });
+    if (sp.names) [[P, sp.names[0]], [Q, sp.names[1]], [T, sp.names[2]]].forEach(([v, s]) => { const p = inward(v, cen, -12); b += tx(p[0], p[1], s, C_DIM, 12); });
+    return svgWrap(300, 140, b);
+  };
+  // 합동인 두 삼각형: 왼쪽 ㄱㄴㄷ, 오른쪽은 뒤집힌 ㄹㅁㅂ
+  DG.g_cong = sp => {
+    // 삼각형을 왼쪽 상자(가로 115, 세로 85)에 맞춰 크게 그린다
+    const raw = triPts(sp.A, sp.B), xs = raw.map(p => p[0]), ys = raw.map(p => p[1]);
+    const sc = Math.min(115 / (Math.max(...xs) - Math.min(...xs)), 85 / (Math.max(...ys) - Math.min(...ys)));
+    const [P, Q, T] = raw.map(p => [25 + (p[0] - Math.min(...xs)) * sc, 110 - (Math.max(...ys) - p[1]) * sc]);
+    const flip = p => [300 - p[0], p[1]];
+    const P2 = flip(P), Q2 = flip(Q), T2 = flip(T);
+    const c1 = [(P[0] + Q[0] + T[0]) / 3, (P[1] + Q[1] + T[1]) / 3], c2 = [300 - c1[0], c1[1]];
+    let b = pg([P, Q, T]) + pg([P2, Q2, T2]);
+    // 이름: 밑변 두 꼭짓점은 아래, 꼭대기는 위 / 각도: 꼭짓점 옆(바깥)
+    [[P, 'ㄱ'], [Q, 'ㄴ'], [P2, 'ㄹ'], [Q2, 'ㅁ']].forEach(([v, sname]) => { b += tx(v[0], v[1] + 15, sname, C_DIM, 12); });
+    [[T, 'ㄷ'], [T2, 'ㅂ']].forEach(([v, sname]) => { b += tx(v[0], v[1] - 6, sname, C_DIM, 12); });
+    b += tx(P[0] - 4, P[1] - 4, sp.A + '°', C_ACC, 11, 'end') + tx(Q[0] + 4, Q[1] - 4, sp.B + '°', C_ACC, 11, 'start');
+    b += tx(T2[0] + 8, T2[1] + 14, '?', C_Q, 14, 'start');
+    return svgWrap(300, 125, b);
+  };
+  // 사각형: kind 'para' | 'rhombus' | 'quad', angles [왼아래, 오른아래, 오른위, 왼위], sides [아래, 왼쪽]
+  DG.g_quad = sp => {
+    let V;
+    if (sp.kind2 === 'quad') V = [[55, 118], [235, 118], [262, 40], [100, 22]];
+    else { const a = (sp.acute || 65) * Math.PI / 180, s = sp.kind2 === 'rhombus' ? 100 : 75, w = sp.kind2 === 'rhombus' ? 100 : 150, dx = s * Math.cos(a), dy = s * Math.sin(a), x0 = 150 - (w + dx) / 2; V = [[x0, 118], [x0 + w, 118], [x0 + w + dx, 118 - dy], [x0 + dx, 118 - dy]]; }
+    const cen = [V.reduce((t, p) => t + p[0], 0) / 4, V.reduce((t, p) => t + p[1], 0) / 4];
+    let b = pg(V);
+    (sp.angles || []).forEach((s, i) => { if (s) { const p = inward(V[i], cen, 24); b += tx(p[0], p[1], s, s.includes('?') ? C_Q : C_ACC, 12); } });
+    (sp.sides || []).forEach((s, i) => { if (s) { const [u, v] = i === 0 ? [V[0], V[1]] : [V[0], V[3]]; const p = outside(u, v, cen, 14); b += tx(p[0], p[1], s, s.includes('?') ? C_Q : C_LINE, 12); } });
+    if (sp.kind2 === 'rhombus') [[V[0], V[1]], [V[1], V[2]], [V[2], V[3]], [V[3], V[0]]].forEach(([u, v]) => { const m = mid(u, v); b += `<circle cx="${m[0].toFixed(1)}" cy="${m[1].toFixed(1)}" r="2.5" fill="${C_ACC}"/>`; });
+    return svgWrap(300, 135, b);
+  };
+  // 정다각형: n, side(글자), mark(한 꼭짓점 표시)
+  DG.g_poly = sp => {
+    const cx = 150, cy = 72, r = 56, V = Array.from({ length: sp.n }, (_, i) => { const a = -Math.PI / 2 + i / sp.n * Math.PI * 2 + (sp.n % 2 ? 0 : Math.PI / sp.n); return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
+    let b = pg(V, C_LINE, C_FILL, 2.5, sp.dashed);
+    if (sp.side) { const p = outside(V[0], V[1], [cx, cy], 14); b += tx(p[0], p[1], sp.side, C_LINE, 12); }
+    if (sp.mark) b += `<circle cx="${V[0][0].toFixed(1)}" cy="${V[0][1].toFixed(1)}" r="5" fill="${C_Q}"/>`;
+    return svgWrap(300, 140, b);
+  };
+  // 넓이 도형: kind rect|para|tri|trap|rhom|square, 글자 a,b,h,p,q
+  DG.g_area = sp => {
+    let b = '', V;
+    const L = (x1, y1, x2, y2, s, ox, oy, col) => ln(x1, y1, x2, y2, col || C_ACC, 1.5, true) + tx((x1 + x2) / 2 + (ox || 0), (y1 + y2) / 2 + (oy || 0), s, col || C_ACC, 12);
+    if (sp.shape === 'rect' || sp.shape === 'square') { V = [[70, 118], [230, 118], [230, 28], [70, 28]]; if (sp.shape === 'square') V = [[105, 118], [195, 118], [195, 28], [105, 28]]; b += pg(V); if (sp.a) b += tx(150, 134, sp.a, C_LINE, 12); if (sp.b) b += tx(V[1][0] + 8, 77, sp.b, C_LINE, 12, 'start'); if (sp.inner) b += tx(150, 78, sp.inner, C_ACC, 12); }
+    else if (sp.shape === 'para') { V = [[55, 118], [205, 118], [245, 28], [95, 28]]; b += pg(V) + L(95, 28, 95, 118, sp.h, 18, 0) + tx(130, 134, sp.a, C_LINE, 12); }
+    else if (sp.shape === 'tri') { V = [[60, 118], [240, 118], [170, 26]]; b += pg(V) + L(170, 26, 170, 118, sp.h, 18, 0) + tx(150, 134, sp.a, C_LINE, 12); }
+    else if (sp.shape === 'trap') { V = [[50, 118], [250, 118], [195, 30], [105, 30]]; b += pg(V) + L(105, 30, 105, 118, sp.h, 18, 0) + tx(150, 134, sp.b, C_LINE, 12) + tx(150, 22, sp.a, C_LINE, 12); }
+    else if (sp.shape === 'rhom') { V = [[150, 18], [230, 72], [150, 126], [70, 72]]; b += pg(V) + ln(150, 18, 150, 126, C_ACC, 1.5, true) + ln(70, 72, 230, 72, C_ACC, 1.5, true) + tx(162, 52, sp.p, C_ACC, 12, 'start') + tx(110, 66, sp.q, C_ACC, 12); }
+    return svgWrap(300, 142, b);
+  };
+  // 직육면체 겨냥도: a(가로) b(세로, 깊이) c(높이) 글자, 보이지 않는 모서리는 점선
+  DG.g_box = sp => {
+    const W = sp.cube ? 100 : 130, H = sp.cube ? 100 : 80, Dx = sp.cube ? 45 : 50, Dy = sp.cube ? 32 : 30, x0 = 150 - (W + Dx) / 2, y0 = 128;
+    const A = [x0, y0], Bp = [x0 + W, y0], Cp = [x0 + W, y0 - H], Dp = [x0, y0 - H];
+    const E = [A[0] + Dx, A[1] - Dy], F = [Bp[0] + Dx, Bp[1] - Dy], G = [Cp[0] + Dx, Cp[1] - Dy], Hh = [Dp[0] + Dx, Dp[1] - Dy];
+    let b = pg([A, Bp, Cp, Dp], C_LINE, C_FILL) + pg([Bp, F, G, Cp], C_LINE, '#162032') + pg([Dp, Cp, G, Hh], C_LINE, '#22304a');
+    b += ln(A[0], A[1], E[0], E[1], C_DIM, 1.5, true) + ln(E[0], E[1], F[0], F[1], C_DIM, 1.5, true) + ln(E[0], E[1], Hh[0], Hh[1], C_DIM, 1.5, true);
+    if (sp.a) b += tx((A[0] + Bp[0]) / 2, y0 + 14, sp.a, C_ACC, 12);
+    if (sp.b) b += tx((Bp[0] + F[0]) / 2 + 14, (Bp[1] + F[1]) / 2 + 8, sp.b, C_ACC, 12, 'start');
+    if (sp.c) b += tx(F[0] + 8, (F[1] + G[1]) / 2 + 4, sp.c, sp.c.includes('?') ? C_Q : C_ACC, 12, 'start');
+    return svgWrap(300, 145, b);
+  };
+  // 각기둥(prism) / 각뿔(pyramid): 밑면 n각형
+  DG.g_solid = sp => {
+    const n = sp.n, cx = 150, rx = 70, ry = 20, yb = 120, top = sp.pyramid ? 18 : 40;
+    // 살짝 돌려서 앞뒤 꼭짓점이 겹쳐 보이지 않게 (사각기둥이 납작한 직사각형처럼 보이던 문제)
+    const base = Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2 + 0.35; return [cx + rx * Math.cos(a), yb + ry * Math.sin(a), Math.sin(a)]; });
+    const back = v => v[2] < -0.05;
+    let b = '';
+    const edge = (u, v, hidden) => ln(u[0], u[1], v[0], v[1], hidden ? C_DIM : C_LINE, hidden ? 1.5 : 2.5, hidden);
+    for (let i = 0; i < n; i++) { const u = base[i], v = base[(i + 1) % n]; b += edge(u, v, back(u) && back(v)); }
+    if (sp.pyramid) { const apex = [cx, top]; base.forEach(v => { b += edge(v, apex, back(v)); }); }
+    else {
+      const up = base.map(v => [v[0], v[1] - (yb - top - ry), v[2]]);
+      for (let i = 0; i < n; i++) { const u = up[i], v = up[(i + 1) % n]; b += edge(u, v, false); b += edge(base[i], up[i], back(base[i])); }
+    }
+    return svgWrap(300, 145, b);
+  };
+  // 밀기: 칸 줄에서 a번째 칸의 도형을 오른쪽으로 c칸
+  DG.g_slide = sp => {
+    const n = Math.max(sp.a + sp.c + 1, 10), w = Math.min(26, 280 / n), x0 = 150 - n * w / 2, y = 52;
+    let b = '';
+    for (let i = 0; i < n; i++) b += `<rect x="${(x0 + i * w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${w.toFixed(1)}" fill="none" stroke="#334155"/>`;
+    const cx = x0 + (sp.a - 0.5) * w;
+    b += pg([[cx, y + 4], [cx + w * 0.38, y + w - 4], [cx - w * 0.38, y + w - 4]], C_ACC, C_ACC, 1);
+    b += tx(x0 + w * 0.5, y + w + 16, '1번째', C_DIM, 10, 'middle', 'normal');
+    b += `<path d="M${cx},${y - 8} Q${cx + sp.c * w / 2},${y - 30} ${cx + sp.c * w},${y - 8}" fill="none" stroke="${C_Q}" stroke-width="2"/>` + tx(cx + sp.c * w / 2, y - 26, '오른쪽 ' + sp.c + '칸', C_Q, 11);
+    return svgWrap(300, 100, b);
+  };
+  // 돌리기: 화살표 모양 도형 + 도는 방향
+  DG.g_turn = sp => {
+    let b = pg([[120, 70], [150, 40], [180, 70], [162, 70], [162, 100], [138, 100], [138, 70]], C_ACC, C_FILL, 2.5);
+    const cw = sp.dir !== 'ccw';
+    b += `<path d="M${cw ? 205 : 95},55 A55,55 0 0 ${cw ? 1 : 0} ${cw ? 205 : 95},95" fill="none" stroke="${C_Q}" stroke-width="2.5"/>`;
+    b += pg(cw ? [[205, 95], [198, 86], [212, 86]] : [[95, 95], [88, 86], [102, 86]], C_Q, C_Q, 1);
+    b += tx(cw ? 250 : 50, 80, sp.label, C_Q, 12);
+    return svgWrap(300, 125, b);
+  };
+  // 수직선: from~to, 이상(●)/초과(○) 표시
+  DG.g_numline = sp => {
+    const lo = sp.a - 2, hi = sp.b + 2, n = hi - lo, x0 = 20, x1 = 280, X = v => x0 + (v - lo) / n * (x1 - x0), y = 60;
+    let b = ln(x0, y, x1, y, C_DIM, 2);
+    for (let v = lo; v <= hi; v++) { b += ln(X(v), y - 5, X(v), y + 5, C_DIM, 1.5); if (v === sp.a || v === sp.b || n <= 14) b += tx(X(v), y + 20, v, v === sp.a || v === sp.b ? C_TXT : C_DIM, n > 14 ? 9 : 10, 'middle', v === sp.a || v === sp.b ? 'bold' : 'normal'); }
+    b += ln(X(sp.a), y, X(sp.b), y, C_ACC, 4);
+    [[sp.a, sp.inc], [sp.b, sp.inc]].forEach(([v, inc]) => { b += `<circle cx="${X(v).toFixed(1)}" cy="${y}" r="6" fill="${inc ? C_ACC : '#0f172a'}" stroke="${C_ACC}" stroke-width="2.5"/>`; });
+    return svgWrap(300, 95, b);
+  };
+  // 대응표: ○ / ☆ 표, 마지막 칸 '?'
+  DG.g_table = sp => {
+    const cols = sp.top.length + 1, w = Math.min(52, 280 / cols), x0 = 150 - cols * w / 2;
+    let b = '';
+    [['○', sp.top], ['☆', sp.bottom]].forEach(([h, row], r) => {
+      const y = 30 + r * 34;
+      b += `<rect x="${x0}" y="${y}" width="${w}" height="34" fill="#334155" stroke="${C_DIM}"/>` + tx(x0 + w / 2, y + 22, h, C_ACC, 15);
+      row.forEach((v, i) => { b += `<rect x="${(x0 + (i + 1) * w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="34" fill="${C_FILL}" stroke="${C_DIM}"/>` + tx(x0 + (i + 1.5) * w, y + 22, v, v === '?' ? C_Q : C_TXT, 13); });
+    });
+    return svgWrap(300, 110, b);
+  };
+  // 바둑돌 정사각형 배열
+  DG.g_dots = sp => {
+    const n = sp.n, gap = Math.min(16, 110 / n), x0 = 150 - (n - 1) * gap / 2, y0 = 70 - (n - 1) * gap / 2;
+    let b = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) b += `<circle cx="${(x0 + c * gap).toFixed(1)}" cy="${(y0 + r * gap).toFixed(1)}" r="${(gap * 0.38).toFixed(1)}" fill="${(r + c) % 2 ? '#f8fafc' : '#0f172a'}" stroke="${C_DIM}"/>`;
+    b += tx(x0 + (n - 1) * gap / 2, y0 - gap, '한 변에 ' + n + '개', C_ACC, 11);
+    return svgWrap(300, 140, b);
+  };
+  // 주머니 속 공: balls [{color, count}]
+  DG.g_bag = sp => {
+    let b = `<path d="M90,40 Q80,128 150,128 Q220,128 210,40 Z" fill="${C_FILL}" stroke="${C_DIM}" stroke-width="2.5"/>` + ln(100, 40, 200, 40, C_DIM, 3);
+    let i = 0; const total = sp.balls.reduce((t, x) => t + x.count, 0), per = Math.min(6, Math.ceil(Math.sqrt(total * 1.6)));
+    sp.balls.forEach(bl => { for (let k = 0; k < bl.count; k++, i++) { const r = Math.floor(i / per), c = i % per; b += `<circle cx="${(150 - (per - 1) * 9 + c * 18).toFixed(1)}" cy="${(112 - r * 17).toFixed(1)}" r="7.5" fill="${bl.color}" stroke="#0f172a"/>`; } });
+    return svgWrap(300, 140, b);
+  };
+  Object.keys(DG).forEach(k => Bank.registerDiagram(k, DG[k]));
+  Bank.gradeDiagrams = DG;
+
+  // =========================================================== 문제별 그림 연결 (gen → 문제의 수로 그림 정보 만들기)
+  // 그림에만 필요한 다른 막대·띠 조각 등은 문제의 수에서 만든 별도 난수로 정한다 (문제 출제 순서에 영향 없음)
+  const CoreRng = (root.NextRoomCore || (typeof require !== 'undefined' ? require('./v5-core.js') : null)).makeRng;
+  const NAMES4 = ['가', '나', '다', '라'];
+  // 나머지(100 − pct)를 2~3조각으로 (가능하면 5의 배수)
+  function splitRest(fr, rest) {
+    const parts = []; let left = rest;
+    const k = rest >= 30 ? 3 : 2;
+    for (let i = 0; i < k - 1; i++) { const unit = left % 5 === 0 ? 5 : 1; const lo = unit, hi = left - unit * (k - 1 - i); const v = Math.max(lo, Math.round(fr.int(Math.ceil(lo / unit), Math.floor(hi / unit / 1.3) || 1) * unit)); parts.push(v); left -= v; }
+    parts.push(left);
+    return parts.filter(v => v > 0);
+  }
+  const deg = v => v + '°';
+  const FIG = {
+    u412_tri: ([a, b]) => ({ kind: 'g_tri', A: a, B: b, angles: [deg(a), deg(b), '?'] }),
+    u412_quad: ([a, b, c]) => ({ kind: 'g_quad', kind2: 'quad', angles: [deg(a), deg(b), deg(c), '?'] }),
+    u412_clock: ([h]) => ({ kind: 'g_clock', h }),
+    u414_turn: ([a]) => ({ kind: 'g_turn', dir: 'ccw', label: deg(a) }),
+    u414_turns: ([k]) => ({ kind: 'g_turn', dir: 'cw', label: '90° × ' + k }),
+    u414_twice: ([a, b]) => ({ kind: 'g_turn', dir: 'cw', label: deg(a) + ' → ' + deg(b) }),
+    u414_slide: ([a, c]) => ({ kind: 'g_slide', a, c }),
+    u415_read: ([k, n], fr) => { const bars = NAMES4.map(nm => ({ name: nm + '반', v: k * fr.int(2, n + 2) })); const t = fr.int(0, 3); bars[t] = { name: NAMES4[t] + '반', v: k * n, label: '?', hi: true }; return { kind: 'g_bar', k, unit: '명', bars }; },
+    u415_cells: ([k, n], fr) => { const bars = NAMES4.slice(0, 3).map(nm => ({ name: nm + '반', v: k * fr.int(2, n + 2) })); bars[1] = { name: '나반', v: k * n, label: k * n + '명', hi: true }; return { kind: 'g_bar', k, unit: '명', bars }; },
+    u415_diff: ([k, a, b], fr) => ({ kind: 'g_bar', k, unit: '명', bars: fr.shuffle([{ name: '', v: k * a, hi: true }, { name: '', v: k * b, hi: true }, { name: '', v: k * fr.int(b, a) }]).map((x, i) => Object.assign(x, { name: NAMES4[i] + '반' })) }),
+    u415_total: ([a, b, c]) => ({ kind: 'g_bar', k: 5, unit: '명', bars: [{ name: '가반', v: a, label: String(a) }, { name: '나반', v: b, label: String(b) }, { name: '다반', v: c, label: String(c) }, { name: '라반', v: null }] }),
+    u415_maxmin: ([k, mx, mn], fr) => ({ kind: 'g_bar', k, unit: '개', bars: fr.shuffle([{ v: k * mx, hi: true }, { v: k * mn, hi: true }, { v: k * fr.int(mn + 1, mx - 1) }, { v: k * fr.int(mn + 1, mx - 1) }]).map((x, i) => Object.assign(x, { name: ['사과', '배', '감', '귤'][i] })) }),
+    u416_square: ([n]) => ({ kind: 'g_dots', n }),
+    u422_isoper: ([a, b]) => { const ba = Math.acos(b / 2 / a) * 180 / Math.PI; return { kind: 'g_tri', A: ba, B: ba, sides: [b + ' cm', a + ' cm', a + ' cm'], ticks: 2 }; },
+    u422_eqside: () => ({ kind: 'g_tri', A: 60, B: 60, sides: ['? cm'], ticks: 3 }),
+    u422_eqper: ([s]) => ({ kind: 'g_tri', A: 60, B: 60, sides: [s + ' cm'], ticks: 3 }),
+    u422_base: ([a]) => ({ kind: 'g_tri', A: (180 - a) / 2, B: (180 - a) / 2, angles: ['?', '', deg(a)], ticks: 2 }),
+    u422_apex: ([b]) => ({ kind: 'g_tri', A: b, B: b, angles: [deg(b), '', '?'], ticks: 2 }),
+    u424_paraper: ([a, b]) => ({ kind: 'g_quad', kind2: 'para', acute: 62, sides: [a + ' cm', b + ' cm'] }),
+    u424_paraang: ([a]) => a < 90 ? { kind: 'g_quad', kind2: 'para', acute: a, angles: [deg(a), '?'] } : { kind: 'g_quad', kind2: 'para', acute: 180 - a, angles: ['?', deg(a)] },
+    u424_paraopp: ([a]) => a < 90 ? { kind: 'g_quad', kind2: 'para', acute: a, angles: [deg(a), '', '?'] } : { kind: 'g_quad', kind2: 'para', acute: 180 - a, angles: ['', deg(a), '', '?'] },
+    u424_rhper: ([s]) => ({ kind: 'g_quad', kind2: 'rhombus', acute: 60, sides: [s + ' cm'] }),
+    u424_rhside: () => ({ kind: 'g_quad', kind2: 'rhombus', acute: 60, sides: ['? cm'] }),
+    u425_change: ([k, n], fr) => { const v1 = k * fr.int(2, 5); return { kind: 'g_line', xs: ['10시', '11시', '12시'], ys: [v1, v1 + k * n, v1 + k * n - k], base: v1 - k, step: k, unit: '℃' }; },
+    u425_rise: ([a, b]) => { const st = b - a > 10 ? 2 : 1, ys = [0, 1, 2, 3, 4].map(i => Math.round(a + (b - a) * i / 4)); return { kind: 'g_line', xs: ['9시', '10시', '11시', '12시', '1시'], ys, base: a - st, step: st, unit: '℃', labels: [a + '℃', '', '', '', b + '℃'] }; },
+    u425_mid: ([a, d]) => ({ kind: 'g_line', xs: ['3월', '4월', '5월'], ys: [a, null, a + d], base: a - 1, step: 1, unit: 'cm', labels: [a + ' cm', '', (a + d) + ' cm'] }),
+    u425_cells: ([k, n]) => { const s = k / 10, v0 = 30 + s; return { kind: 'g_line', xs: ['1월', '2월'], ys: [v0, v0 + s * n], base: v0 - s, step: s, unit: 'kg' }; },
+    u426_per: ([n, s]) => ({ kind: 'g_poly', n, side: s + ' cm' }),
+    u426_side: ([n]) => ({ kind: 'g_poly', n, side: '? cm' }),
+    u426_diag: ([n]) => ({ kind: 'g_poly', n }),
+    u426_onevert: ([n]) => ({ kind: 'g_poly', n, mark: true }),
+    u426_vert: ([n]) => ({ kind: 'g_poly', n }),
+    u513_table: ([k, a]) => ({ kind: 'g_table', top: [1, 2, 3, a], bottom: [k, 2 * k, 3 * k, '?'] }),
+    u513_addtable: ([k, a]) => ({ kind: 'g_table', top: [1, 2, 3, a], bottom: [1 + k, 2 + k, 3 + k, '?'] }),
+    u516_rect: ([a, b]) => ({ kind: 'g_area', shape: 'rect', a: a + ' cm', b: b + ' cm' }),
+    u516_rectper: ([a, b]) => ({ kind: 'g_area', shape: 'rect', a: a + ' cm', b: b + ' cm' }),
+    u516_para: ([a, h]) => ({ kind: 'g_area', shape: 'para', a: a + ' cm', h: h + ' cm' }),
+    u516_tri: ([a, h]) => ({ kind: 'g_area', shape: 'tri', a: a + ' cm', h: h + ' cm' }),
+    u516_trap: ([a, b, h]) => ({ kind: 'g_area', shape: 'trap', a: a + ' cm', b: b + ' cm', h: h + ' cm' }),
+    u516_rhom: ([p, q]) => ({ kind: 'g_area', shape: 'rhom', p: p + ' cm', q: q + ' cm' }),
+    u516_sq: ([s]) => ({ kind: 'g_area', shape: 'square', a: '? cm', inner: s * s + ' cm²' }),
+    u521_incl: ([a, b]) => ({ kind: 'g_numline', a, b, inc: true }),
+    u521_excl: ([a, b]) => ({ kind: 'g_numline', a, b, inc: false }),
+    u523_corr: ([a, b]) => ({ kind: 'g_cong', A: a, B: b }),
+    u523_iso: ([b]) => ({ kind: 'g_tri', A: b, B: b, angles: [deg(b), '', '?'], ticks: 2 }),
+    u525_parts: () => ({ kind: 'g_box' }),
+    u525_fact: () => ({ kind: 'g_box' }),
+    u525_edges: ([a, b, c]) => ({ kind: 'g_box', a: a + ' cm', b: b + ' cm', c: c + ' cm' }),
+    u525_cubeEdges: ([s]) => ({ kind: 'g_box', cube: true, a: s + ' cm' }),
+    u525_cubeSide: () => ({ kind: 'g_box', cube: true, a: '? cm' }),
+    u526_sure: ([c, k]) => ({ kind: 'g_bag', balls: [{ color: { 흰: '#f8fafc', 노란: '#facc15', 빨간: '#ef4444' }[c], count: k }] }),
+    u526_half: ([k]) => ({ kind: 'g_bag', balls: [{ color: '#ef4444', count: k }, { color: '#3b82f6', count: k }] }),
+    u612_prism0: ([n]) => ({ kind: 'g_solid', n }), u612_prism1: ([n]) => ({ kind: 'g_solid', n }), u612_prism2: ([n]) => ({ kind: 'g_solid', n }),
+    u612_pyr0: ([n]) => ({ kind: 'g_solid', n, pyramid: true }), u612_pyr1: ([n]) => ({ kind: 'g_solid', n, pyramid: true }), u612_pyr2: ([n]) => ({ kind: 'g_solid', n, pyramid: true }),
+    u615_count: ([n, pct], fr) => { const segs = [{ name: '가', pct, txt: pct + '%', hi: true }].concat(splitRest(fr, 100 - pct).map((v, i) => ({ name: ['나', '다', '라'][i], pct: v }))); return { kind: 'g_band', segs, total: '전체 ' + n + '명' }; },
+    u615_pct: ([n, k], fr) => { const pct = k * 100 / n; return { kind: 'g_pie', segs: [{ name: '가 (' + k + '명)', pct, txt: '?', hi: true }].concat(splitRest(fr, 100 - pct).map((v, i) => ({ name: ['나', '다', '라'][i], pct: v }))) }; },
+    u615_deg: ([pct], fr) => ({ kind: 'g_pie', segs: [{ name: '가', pct, txt: pct + '%', hi: true }].concat(splitRest(fr, 100 - pct).map((v, i) => ({ name: ['나', '다', '라'][i], pct: v }))) }),
+    u615_pict: ([a, b]) => ({ kind: 'g_pict', a, b }),
+    u615_band: ([pct], fr) => ({ kind: 'g_band', segs: [{ name: '가', pct, txt: pct + '%', hi: true }].concat(splitRest(fr, 100 - pct).map((v, i) => ({ name: ['나', '다', '라'][i], pct: v }))), total: '띠 전체 길이 20 cm' }),
+    u616_vol: ([a, b, c]) => ({ kind: 'g_box', a: a + ' cm', b: b + ' cm', c: c + ' cm' }),
+    u616_area: ([a, b, c]) => ({ kind: 'g_box', a: a + ' cm', b: b + ' cm', c: c + ' cm' }),
+    u616_cubeVol: ([s]) => ({ kind: 'g_box', cube: true, a: s + ' cm' }),
+    u616_cubeArea: ([s]) => ({ kind: 'g_box', cube: true, a: s + ' cm' }),
+    u616_height: ([a, b]) => ({ kind: 'g_box', a: a + ' cm', b: b + ' cm', c: '? cm' })
+  };
+  function attachFigure(c) {
+    if (!c || !FIG[c.gen]) return c;
+    const fr = CoreRng('fig', c.gen, JSON.stringify(c.params));
+    const spec = FIG[c.gen](c.params, fr);
+    if (spec) c.diagram = spec;
+    return c;
+  }
+  Object.keys(units).forEach(id => { const raw = units[id].core; units[id].core = (r, v) => attachFigure(raw(r, v)); });
+  Bank.gradeFigures = FIG;
+
   Object.keys(units).forEach(id => Bank.registerUnit(+id, units[id]));
   // 학기 안 순서는 출판사 목차가 아니라 교육과정 영역 순서: 수와 연산 → 변화와 관계 → 도형과 측정 → 자료와 가능성
   const GRADE_GROUPS = [['4-1', [411, 413, 416, 412, 414, 415]], ['4-2', [421, 423, 422, 424, 426, 425]], ['5-1', [511, 512, 514, 515, 513, 516]], ['5-2', [521, 522, 524, 523, 525, 526]], ['6-1', [611, 613, 614, 612, 616, 615]], ['6-2', [1, 2, 4, 3, 5, 6]]];
